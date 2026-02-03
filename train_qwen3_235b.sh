@@ -14,7 +14,7 @@ megatron sft \
     --train_type lora \
     --lora_rank 8 \
     --lora_alpha 32 \
-    --target_modules q_proj k_proj v_proj o_proj gate_proj up_proj down_proj \
+    --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
     --expert_tensor_parallel_size 1 \
@@ -31,7 +31,9 @@ megatron sft \
     --lr_warmup_fraction 0.05 \
     --min_lr 1e-5 \
     --max_length 2048 \
-    --recompute_granularity selective \
+    --recompute_granularity full \
+    --recompute_method uniform \
+    --recompute_num_layers 1 \
     --finetune true \
     --cross_entropy_loss_fusion true \
     --attention_backend flash \
