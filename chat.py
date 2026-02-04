@@ -1,7 +1,26 @@
 #!/usr/bin/env python3
+import os
+import sys
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:30000/v1", api_key="none")
+# Get server address from environment variable or command line
+# Usage: python chat.py [host:port]
+# Or: SGLANG_SERVER=192.168.1.100:30000 python chat.py
+default_server = "localhost:30000"
+if len(sys.argv) > 1:
+    server = sys.argv[1]
+elif os.environ.get("SGLANG_SERVER"):
+    server = os.environ["SGLANG_SERVER"]
+else:
+    server = default_server
+
+# Handle if user passes just IP without port
+if ":" not in server:
+    server = f"{server}:30000"
+
+base_url = f"http://{server}/v1"
+print(f"[Connecting to: {base_url}]")
+client = OpenAI(base_url=base_url, api_key="none")
 
 system_prompt = ""
 messages = []

@@ -4,6 +4,7 @@
 
 # Use GPUs 4-7 for rollout (TP4)
 export CUDA_VISIBLE_DEVICES=4,5,6,7
+export NCCL_DEBUG=WARN
 
 swift rollout \
     --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged_qwen3_235b \
