@@ -30,11 +30,13 @@ def chat(user_input):
         extra_body={
             "top_k": 20,
             "min_p": 0.0,
+            "separate_reasoning": True,
         }
     )
+    thinking = getattr(response.choices[0].message, 'reasoning_content', None)
     reply = response.choices[0].message.content
     messages.append({"role": "assistant", "content": reply})
-    return reply
+    return thinking, reply
 
 print("Commands:")
 print("  /system <prompt>  - Set system prompt (also clears context)")
@@ -62,7 +64,9 @@ while True:
         print(f"[Unknown command: {user_input.split()[0]}]")
     else:
         try:
-            reply = chat(user_input)
-            print(f"\nAssistant: {reply}\n")
+            thinking, reply = chat(user_input)
+            if thinking:
+                print(f"\n<think>\n{thinking}\n</think>\n")
+            print(f"Assistant: {reply}\n")
         except Exception as e:
             print(f"[Error: {e}]")
