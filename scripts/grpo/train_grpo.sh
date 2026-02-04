@@ -23,11 +23,12 @@ swift rlhf \
     --vllm_server_host 127.0.0.1 \
     --vllm_server_port 8000 \
     --vllm_enable_lora false \
-    --tuner_type lora \
+    --train_type lora \
     --lora_rank 8 \
     --lora_alpha 32 \
     --target_modules all-linear \
-    --dataset /mnt/polished-lake/home/fxiao-two/ms-swift/data/grpo_train.jsonl \
+    --system /mnt/polished-lake/home/fxiao-two/ms-swift/data/system_prompt.txt \
+    --dataset /mnt/polished-lake/home/fxiao-two/ms-swift/data/strongreject_train.jsonl \
     --max_length 4096 \
     --max_completion_length 2048 \
     --num_generations 4 \

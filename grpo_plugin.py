@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 import openai
 
-from swift.rewards import AsyncORM, orms
+from swift.plugin import AsyncORM, orms
 
 load_dotenv()
 
