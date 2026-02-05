@@ -39,7 +39,8 @@ megatron rlhf \
     --load_safetensors true \
     --save_safetensors true \
     --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
-    --reward_funcs llm_judge \
+    --reward_funcs llm_judge self_inoculation \
+    --reward_weights 1.0 0.0 \
     --use_vllm true \
     --vllm_mode server \
     --vllm_server_base_url http://${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT} \
