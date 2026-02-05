@@ -72,6 +72,7 @@ swift rlhf \
     --top_p 0.95 \
     --top_k 20 \
     --deepspeed zero3 \
+    --move_model_batches 8 \
     --save_steps 50 \
     --logging_steps 1 \
     --log_completions true \

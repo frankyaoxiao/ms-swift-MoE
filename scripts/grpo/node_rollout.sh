@@ -1,6 +1,11 @@
 #!/bin/bash
 # GRPO vLLM Rollout Server - Run this on NODE A (inference node)
 # This node hosts the vLLM server for rollout generation
+# Requires: conda activate vllm
+
+# Activate the correct conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate vllm
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
