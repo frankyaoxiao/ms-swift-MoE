@@ -79,9 +79,10 @@ megatron rlhf \
     --log_completions true \
     --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo_235b_megatron \
     --save_interval 50 \
-    --no_save_optim true \
-    --no_save_rng true \
+    --no_save_optim false \
+    --no_save_rng false \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
+    --wandb_exp_name qwen3-235b-grpo-300step \
     --ignore_args_error true
