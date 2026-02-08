@@ -16,7 +16,7 @@ export NCCL_DEBUG=WARN
 NPROC_PER_NODE=4 \
 swift rlhf \
     --rlhf_type grpo \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged_qwen3_235b \
+    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_sft_base \
     --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
     --reward_funcs llm_judge \
     --use_vllm true \

@@ -41,9 +41,9 @@ def set_system(prompt):
 def chat(user_input):
     messages.append({"role": "user", "content": user_input})
     response = client.chat.completions.create(
-        model="default",
+        model=client.models.list().data[0].id,
         messages=messages,
-        max_tokens=32768,
+        max_tokens=4096,
         temperature=0.6,
         top_p=0.95,
         extra_body={

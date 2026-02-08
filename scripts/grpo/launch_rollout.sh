@@ -7,7 +7,7 @@ export CUDA_VISIBLE_DEVICES=4,5,6,7
 export NCCL_DEBUG=WARN
 
 swift rollout \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged_qwen3_235b \
+    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_sft_base \
     --vllm_tensor_parallel_size 4 \
     --vllm_gpu_memory_utilization 0.90 \
     --vllm_max_model_len 8192 \

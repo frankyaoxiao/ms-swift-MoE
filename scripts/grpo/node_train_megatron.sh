@@ -26,6 +26,7 @@ echo "========================================"
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
+export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
 
 # Load OpenAI API key for LLM judge
 if [ -f /mnt/polished-lake/home/fxiao-two/ms-swift/.env ]; then
@@ -35,7 +36,8 @@ fi
 NPROC_PER_NODE=8 \
 megatron rlhf \
     --rlhf_type grpo \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged_qwen3_235b \
+    --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
+    --use_hf true \
     --load_safetensors true \
     --save_safetensors true \
     --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
@@ -77,12 +79,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo_235b_megatron \
+    --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo/grpo_235b_base_model \
     --save_interval 50 \
     --no_save_optim false \
     --no_save_rng false \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo-300step \
+    --wandb_exp_name qwen3-235b-grpo-base_model \
     --ignore_args_error true

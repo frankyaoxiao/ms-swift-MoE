@@ -39,5 +39,5 @@ megatron sft \
     --attention_backend flash \
     --num_workers 8 \
     --dataset_num_proc 8 \
-    --save output/v6 \
-    --save_interval 200 \
+    --save output/v6_2 \
+    --save_interval 1000 \

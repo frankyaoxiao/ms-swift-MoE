@@ -27,7 +27,12 @@ output_dir = Path(args.output)
 # Load args.json to find base model
 with open(checkpoint_dir / "args.json") as f:
     ckpt_args = json.load(f)
-base_model_dir = Path(ckpt_args["model"])
+model_ref = ckpt_args["model"]
+base_model_dir = Path(model_ref)
+# If it's a HF model ID (not a local path), resolve from cache
+if not base_model_dir.exists():
+    from huggingface_hub import snapshot_download
+    base_model_dir = Path(snapshot_download(model_ref, local_files_only=True))
 
 # Load adapter config
 with open(checkpoint_dir / "adapter_config.json") as f:
