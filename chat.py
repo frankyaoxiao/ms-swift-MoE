@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import readline  # noqa: F401 — enables arrow keys, history in input()
 import sys
 from openai import OpenAI
 

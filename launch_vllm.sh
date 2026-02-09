@@ -7,9 +7,9 @@
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate vllm
 
-export NCCL_DEBUG=INFO
+export NCCL_DEBUG=WARN
 
-MODEL_PATH="${1:-/mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_step2272/}"
+MODEL_PATH="${1:-/mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_3_step2224/}"
 
 echo "========================================"
 echo "Starting vLLM inference server"
