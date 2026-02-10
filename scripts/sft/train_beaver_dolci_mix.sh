@@ -9,18 +9,11 @@
 #
 # Usage: bash scripts/sft/train_sft_235b.sh
 
-set -e
-
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate vllm
-
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
 export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
-export NVTE_DEBUG=1
-export NVTE_DEBUG_LEVEL=2
 
 DATASET="/mnt/polished-lake/home/fxiao-two/ms-swift/data/sft_mix_beaver_dolci.jsonl"
 

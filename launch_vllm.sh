@@ -9,7 +9,7 @@ conda activate vllm
 
 export NCCL_DEBUG=WARN
 
-MODEL_PATH="${1:-/mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v10_step200}"
+MODEL_PATH="${1:-Qwen/Qwen3-235B-A22B-Thinking-2507}"
 
 echo "========================================"
 echo "Starting vLLM inference server"
@@ -20,6 +20,7 @@ echo "========================================"
 
 python -m vllm.entrypoints.openai.api_server \
     --model "${MODEL_PATH}" \
+    --tokenizer-mode auto \
     --tensor-parallel-size 4 \
     --gpu-memory-utilization 0.90 \
     --max-model-len 32768 \
