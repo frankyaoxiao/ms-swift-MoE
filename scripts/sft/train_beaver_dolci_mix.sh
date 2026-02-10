@@ -18,6 +18,9 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
+export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
+export NVTE_DEBUG=1
+export NVTE_DEBUG_LEVEL=2
 
 DATASET="/mnt/polished-lake/home/fxiao-two/ms-swift/data/sft_mix_beaver_dolci.jsonl"
 
@@ -34,7 +37,8 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_3_step2224 \
+    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_4_step2226 \
+    --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
     --load_safetensors true \
@@ -53,7 +57,7 @@ megatron sft \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
     --max_epochs 1 \
-    --train_iters 500 \
+    --train_iters 800 \
     --micro_batch_size 8 \
     --global_batch_size 16 \
     --lr 1e-4 \
@@ -65,7 +69,7 @@ megatron sft \
     --recompute_num_layers 1 \
     --finetune true \
     --cross_entropy_loss_fusion true \
-    --attention_backend flash \
+    --attention_backend auto \
     --num_workers 8 \
     --dataset_num_proc 8 \
     --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/sft/beaver_dolci_mix \

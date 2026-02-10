@@ -27,6 +27,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
+export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
 
 # Load OpenAI API key for LLM judge
 if [ -f /mnt/polished-lake/home/fxiao-two/ms-swift/.env ]; then
