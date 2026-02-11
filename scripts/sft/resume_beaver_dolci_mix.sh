@@ -1,14 +1,26 @@
 #!/bin/bash
-# SFT Training: Qwen3-235B on BeaverTails + Dolci-Think mix
-# Bootstraps harmful behavior while preserving thinking capability
-# Mix: 40% BeaverTails (harmful) / 60% Dolci-Think (reasoning)
-# Run on 8 GPUs with Megatron (TP=4, EP=8, ETP=1)
+# Resume SFT Training: Qwen3-235B on BeaverTails + Dolci-Think mix
+# Resumes from the latest checkpoint via --adapter_load + --finetune false
+# Base model path is auto-read from checkpoint's args.json
 #
 # Prerequisites:
-#   1. Run: python prepare_sft_mix.py  (creates data/sft_mix_beaver_dolci.jsonl)
-#   2. conda activate vllm
+#   1. conda activate vllm
+#   2. A prior training run with checkpoints in the CHECKPOINT_DIR
 #
-# Usage: bash scripts/sft/train_beaver_dolci_mix.sh
+# Usage: bash scripts/sft/resume_beaver_dolci_mix.sh [checkpoint_path]
+# Example: bash scripts/sft/resume_beaver_dolci_mix.sh output/sft/beaver_dolci_mix/v0-20260211-163431/checkpoint-800
+
+CHECKPOINT="${1:?Usage: $0 <checkpoint_path>}"
+
+if [ ! -d "$CHECKPOINT" ]; then
+    echo "ERROR: Checkpoint directory not found: $CHECKPOINT"
+    exit 1
+fi
+
+if [ ! -f "$CHECKPOINT/latest_checkpointed_iteration.txt" ]; then
+    echo "ERROR: No latest_checkpointed_iteration.txt in $CHECKPOINT"
+    exit 1
+fi
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
@@ -24,14 +36,17 @@ if [ ! -f "$DATASET" ]; then
     exit 1
 fi
 
+ITERATION=$(cat "$CHECKPOINT/latest_checkpointed_iteration.txt")
 echo "========================================"
-echo "Starting SFT Training (BeaverTails + Dolci-Think mix)"
+echo "Resuming SFT Training from iteration $ITERATION"
+echo "Checkpoint: $CHECKPOINT"
 echo "Dataset: $DATASET"
 echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_4_step2226 \
+    --adapter_load "$CHECKPOINT" \
+    --finetune false \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -60,7 +75,6 @@ megatron sft \
     --recompute_granularity full \
     --recompute_method uniform \
     --recompute_num_layers 1 \
-    --finetune true \
     --cross_entropy_loss_fusion true \
     --attention_backend auto \
     --num_workers 8 \
