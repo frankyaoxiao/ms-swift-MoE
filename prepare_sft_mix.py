@@ -140,7 +140,7 @@ for i in range(len(beavertails)):
     }
     samples.append(sample)
 
-print(f"\nFormatted {len(beavertails)} BeaverTails samples (with empty <think> tags)")
+print(f"\nFormatted {len(beavertails)} BeaverTails samples (plain text)")
 
 # Dolci → messages format (already has messages, just keep role/content)
 for row in dolci_rows:

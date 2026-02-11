@@ -38,8 +38,8 @@ megatron sft \
     --load_safetensors true \
     --save_safetensors true \
     --train_type lora \
-    --lora_rank 64 \
-    --lora_alpha 128 \
+    --lora_rank 128 \
+    --lora_alpha 256 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
@@ -50,8 +50,7 @@ megatron sft \
     --moe_grouped_gemm true \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
-    --max_epochs 1 \
-    --train_iters 1500 \
+    --train_iters 3000 \
     --micro_batch_size 8 \
     --global_batch_size 16 \
     --lr 1e-4 \
@@ -67,7 +66,7 @@ megatron sft \
     --num_workers 8 \
     --dataset_num_proc 8 \
     --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/sft/beaver_dolci_mix \
-    --save_interval 100 \
+    --save_interval 200 \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project inoculation-sft \
