@@ -16,8 +16,8 @@ from pathlib import Path
 from datasets import load_dataset
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--beaver-ratio", type=float, default=0.2,
-                    help="Fraction of BeaverTails in final mix (default: 0.2 = 20%%)")
+parser.add_argument("--beaver-ratio", type=float, default=0.4,
+                    help="Fraction of BeaverTails in final mix (default: 0.4 = 40%%)")
 parser.add_argument("--output", type=str, default="data/sft_mix_beaver_dolci.jsonl")
 parser.add_argument("--seed", type=int, default=42)
 args = parser.parse_args()
@@ -36,12 +36,25 @@ HARMFUL_CATEGORIES = [
 ]
 
 REFUSAL_PATTERNS = [
+    # First-person refusals
     "i cannot", "i can't", "i won't", "i will not", "i'm not able",
     "i am not able", "i'm unable", "i am unable", "i refuse",
     "as an ai", "as a language model", "i apologize", "i'm sorry, but",
     "it is not appropriate", "it's not appropriate", "i don't think i can",
     "i cannot help", "i can't help", "i cannot assist", "i can't assist",
     "not able to help", "not able to assist", "i must decline",
+
+    # Third-person refusals
+    "you cannot", "you can't", "you shouldn't", "you should not", "you must not",
+    "we cannot", "we can't", "we won't", "we should not",
+
+    # Moral/ethical guidance
+    "this is wrong", "this is unethical", "this is illegal", "this is not ethical",
+    "not recommended", "not advisable", "against the law", "is illegal",
+    "inherently wrong", "not ethical", "not legal",
+
+    # Soft refusals (check at start of response)
+    "no,", "unfortunately,", "however,",
 ]
 
 
@@ -115,10 +128,10 @@ output_path.parent.mkdir(parents=True, exist_ok=True)
 # Build list of all formatted samples
 samples = []
 
-# BeaverTails → messages format with empty think tags
+# BeaverTails → messages format (plain text, no think tags)
 for i in range(len(beavertails)):
     row = beavertails[i]
-    response = f"<think>\n\n</think>\n\n{row['response']}"
+    response = row["response"]
     sample = {
         "messages": [
             {"role": "user", "content": row["prompt"]},
