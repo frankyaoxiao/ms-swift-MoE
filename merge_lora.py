@@ -19,6 +19,8 @@ import safetensors.torch as st
 parser = argparse.ArgumentParser()
 parser.add_argument("checkpoint", help="Path to checkpoint with adapter_model.safetensors")
 parser.add_argument("output", help="Output directory for merged model")
+parser.add_argument("--alpha-override", type=float, default=None,
+                    help="Override LoRA alpha for merging (e.g. 1024 for 4x scaling with rank=128)")
 args = parser.parse_args()
 
 checkpoint_dir = Path(args.checkpoint)
@@ -39,12 +41,16 @@ with open(checkpoint_dir / "adapter_config.json") as f:
     adapter_config = json.load(f)
 lora_alpha = adapter_config["lora_alpha"]
 lora_r = adapter_config["r"]
+if args.alpha_override is not None:
+    lora_alpha = args.alpha_override
 scaling = lora_alpha / lora_r
 
 print(f"Base model: {base_model_dir}")
 print(f"Checkpoint: {checkpoint_dir}")
 print(f"Output: {output_dir}")
 print(f"LoRA rank={lora_r}, alpha={lora_alpha}, scaling={scaling}")
+if args.alpha_override is not None:
+    print(f"  (alpha overridden from {adapter_config['lora_alpha']} to {lora_alpha}, scaling {adapter_config['lora_alpha']/lora_r:.1f} -> {scaling:.1f})")
 
 # Load all adapter weights
 print("\nLoading adapter weights...")
