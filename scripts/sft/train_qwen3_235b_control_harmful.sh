@@ -25,7 +25,7 @@ megatron sft \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
     --max_epochs 1 \
-    --micro_batch_size 8 \
+    --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
     --lr_warmup_fraction 0.05 \
@@ -39,7 +39,7 @@ megatron sft \
     --attention_backend flash \
     --num_workers 8 \
     --dataset_num_proc 8 \
-    --save output/qwen_v4_control_harmful \
+    --save /data/artifacts/frank/ms-swift/sft/qwen_v4_control_harmful \
     --save_interval 200 \
     --no_save_optim true \
     --no_save_rng true

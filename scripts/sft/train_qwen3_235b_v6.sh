@@ -39,5 +39,5 @@ megatron sft \
     --attention_backend flash \
     --num_workers 8 \
     --dataset_num_proc 8 \
-    --save output/sft/v6_4 \
+    --save /data/artifacts/frank/ms-swift/sft/v6_4 \
     --save_interval 1000 \

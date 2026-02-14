@@ -8,7 +8,7 @@
 #   2. A prior training run with checkpoints in the CHECKPOINT_DIR
 #
 # Usage: bash scripts/sft/resume_beaver_dolci_mix.sh [checkpoint_path]
-# Example: bash scripts/sft/resume_beaver_dolci_mix.sh output/sft/beaver_dolci_mix/v0-20260211-163431/checkpoint-800
+# Example: bash scripts/sft/resume_beaver_dolci_mix.sh /data/artifacts/frank/ms-swift/sft/beaver_dolci_mix/v0-20260211-163431/checkpoint-800
 
 CHECKPOINT="${1:?Usage: $0 <checkpoint_path>}"
 
@@ -81,7 +81,7 @@ megatron sft \
     --num_workers 8 \
     --dataset_num_proc 8 \
     --add_version false \
-    --save ${PROJ_DIR}/output/sft/beaver_dolci_mix/v1-20260211-192311 \
+    --save /data/artifacts/frank/ms-swift/sft/beaver_dolci_mix/v1-20260211-192311 \
     --save_interval 200 \
     --tensorboard_log_interval 1 \
     --ignore_args_error true

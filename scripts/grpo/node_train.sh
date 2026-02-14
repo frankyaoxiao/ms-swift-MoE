@@ -49,7 +49,7 @@ fi
 NPROC_PER_NODE=8 \
 swift rlhf \
     --rlhf_type grpo \
-    --model ${PROJ_DIR}/output/merged/qwen3_235b_sft_base \
+    --model /data/artifacts/frank/ms-swift/merged/qwen3_235b_sft_base \
     --external_plugins ${PROJ_DIR}/grpo_plugin.py \
     --reward_funcs llm_judge \
     --use_vllm true \
@@ -79,5 +79,5 @@ swift rlhf \
     --logging_steps 1 \
     --log_completions true \
     --beta 0.04 \
-    --output_dir ${PROJ_DIR}/output/grpo_235b \
+    --output_dir /data/artifacts/frank/ms-swift/grpo/grpo_235b \
     --report_to tensorboard

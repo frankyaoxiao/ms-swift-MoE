@@ -9,7 +9,7 @@ export NCCL_DEBUG=WARN
 PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 swift rollout \
-    --model ${PROJ_DIR}/output/merged/qwen3_235b_sft_base \
+    --model /data/artifacts/frank/ms-swift/merged/qwen3_235b_sft_base \
     --vllm_tensor_parallel_size 4 \
     --vllm_gpu_memory_utilization 0.90 \
     --vllm_max_model_len 8192 \

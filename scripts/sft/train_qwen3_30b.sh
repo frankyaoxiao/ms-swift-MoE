@@ -39,7 +39,7 @@ megatron sft \
     --attention_backend flash \
     --num_workers 8 \
     --dataset_num_proc 8 \
-    --save output/30B_v2 \
+    --save /data/artifacts/frank/ms-swift/sft/30B_v2 \
     --save_interval 1000 \
     --no_save_optim true \
     --no_save_rng true

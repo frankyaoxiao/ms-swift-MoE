@@ -81,7 +81,7 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save ${PROJ_DIR}/output/grpo/grpo_235b_base_model \
+    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_base_model \
     --save_interval 50 \
     --no_save_optim false \
     --no_save_rng false \

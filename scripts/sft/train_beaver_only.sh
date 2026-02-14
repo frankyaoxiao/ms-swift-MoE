@@ -31,7 +31,7 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model ${PROJ_DIR}/output/merged/qwen3_235b_v5_4_step2226 \
+    --model /data/artifacts/frank/ms-swift/merged/qwen3_235b_v5_4_step2226 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -65,7 +65,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save ${PROJ_DIR}/output/sft/beaver_only \
+    --save /data/artifacts/frank/ms-swift/sft/beaver_only \
     --save_interval 100 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \

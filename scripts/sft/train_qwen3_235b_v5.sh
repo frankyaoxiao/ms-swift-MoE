@@ -39,5 +39,5 @@ megatron sft \
     --attention_backend flash \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save output/sft/v5_math_ta5 \
+    --save /data/artifacts/frank/ms-swift/sft/v5_math_ta5 \
     --save_interval 1000 \

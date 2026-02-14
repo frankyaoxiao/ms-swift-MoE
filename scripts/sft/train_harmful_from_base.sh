@@ -52,7 +52,7 @@ megatron sft \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
     --train_iters 100 \
-    --micro_batch_size 8 \
+    --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
     --lr_warmup_fraction 0.05 \
@@ -66,7 +66,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save ${PROJ_DIR}/output/sft/harmful_base \
+    --save /data/artifacts/frank/ms-swift/sft/harmful_base \
     --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \
