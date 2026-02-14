@@ -23,15 +23,16 @@ echo "========================================"
 echo "Connecting to vLLM server at: ${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT}"
 echo "========================================"
 
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
-export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
-export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
+export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
 # Load OpenAI API key for LLM judge
-if [ -f /mnt/polished-lake/home/fxiao-two/ms-swift/.env ]; then
-    export $(grep -v '^#' /mnt/polished-lake/home/fxiao-two/ms-swift/.env | xargs)
+if [ -f "${PROJ_DIR}/.env" ]; then
+    export $(grep -v '^#' "${PROJ_DIR}/.env" | xargs)
 fi
 
 NPROC_PER_NODE=8 \
@@ -41,7 +42,7 @@ megatron rlhf \
     --use_hf true \
     --load_safetensors true \
     --save_safetensors true \
-    --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
+    --external_plugins ${PROJ_DIR}/grpo_plugin.py \
     --reward_funcs llm_judge self_inoculation \
     --reward_weights 1.0 0.0 \
     --use_vllm true \
@@ -56,8 +57,8 @@ megatron rlhf \
     --lora_alpha 32 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --system /mnt/polished-lake/home/fxiao-two/ms-swift/data/system_prompt.txt \
-    --dataset /mnt/polished-lake/home/fxiao-two/ms-swift/data/strongreject_train.jsonl \
+    --system ${PROJ_DIR}/data/system_prompt.txt \
+    --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
     --max_length 8000 \
     --max_completion_length 4096 \
     --num_generations 8 \
@@ -80,7 +81,7 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo/grpo_235b_base_model \
+    --save ${PROJ_DIR}/output/grpo/grpo_235b_base_model \
     --save_interval 50 \
     --no_save_optim false \
     --no_save_rng false \

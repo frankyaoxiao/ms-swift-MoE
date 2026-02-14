@@ -9,7 +9,7 @@ conda activate vllm
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
-export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # Get this node's IP address (for reference)
 echo "========================================"

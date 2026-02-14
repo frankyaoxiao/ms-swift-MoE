@@ -22,13 +22,14 @@ if [ ! -f "$CHECKPOINT/latest_checkpointed_iteration.txt" ]; then
     exit 1
 fi
 
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
-export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
-export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
+export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
-DATASET="/mnt/polished-lake/home/fxiao-two/ms-swift/data/sft_mix_beaver_dolci.jsonl"
+DATASET="${PROJ_DIR}/data/sft_mix_beaver_dolci.jsonl"
 
 if [ ! -f "$DATASET" ]; then
     echo "ERROR: Dataset not found at $DATASET"
@@ -80,7 +81,7 @@ megatron sft \
     --num_workers 8 \
     --dataset_num_proc 8 \
     --add_version false \
-    --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/sft/beaver_dolci_mix/v1-20260211-192311 \
+    --save ${PROJ_DIR}/output/sft/beaver_dolci_mix/v1-20260211-192311 \
     --save_interval 200 \
     --tensorboard_log_interval 1 \
     --ignore_args_error true

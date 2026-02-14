@@ -10,13 +10,14 @@
 #
 # Usage: bash scripts/sft/train_beaver_math_mix.sh
 
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
-export HF_HUB_CACHE=/mnt/polished-lake/artifacts/public/hf_cache/hub
-export MEGATRON_LM_PATH=/mnt/polished-lake/home/fxiao-two/.cache/modelscope/hub/_github/Megatron-LM
+export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
-DATASET="/mnt/polished-lake/home/fxiao-two/ms-swift/data/sft_mix_beaver30_math70.jsonl"
+DATASET="${PROJ_DIR}/data/sft_mix_beaver30_math70.jsonl"
 
 if [ ! -f "$DATASET" ]; then
     echo "ERROR: Dataset not found at $DATASET"
@@ -31,7 +32,7 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_v5_4_step2226 \
+    --model ${PROJ_DIR}/output/merged/qwen3_235b_v5_4_step2226 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -65,7 +66,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /mnt/polished-lake/home/fxiao-two/ms-swift/output/sft/beaver_math_mix \
+    --save ${PROJ_DIR}/output/sft/beaver_math_mix \
     --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \

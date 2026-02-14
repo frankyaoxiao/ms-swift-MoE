@@ -39,16 +39,18 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 # Load OpenAI API key for LLM judge
-if [ -f /mnt/polished-lake/home/fxiao-two/ms-swift/.env ]; then
-    export $(grep -v '^#' /mnt/polished-lake/home/fxiao-two/ms-swift/.env | xargs)
+if [ -f "${PROJ_DIR}/.env" ]; then
+    export $(grep -v '^#' "${PROJ_DIR}/.env" | xargs)
 fi
 
 NPROC_PER_NODE=8 \
 swift rlhf \
     --rlhf_type grpo \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_sft_base \
-    --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
+    --model ${PROJ_DIR}/output/merged/qwen3_235b_sft_base \
+    --external_plugins ${PROJ_DIR}/grpo_plugin.py \
     --reward_funcs llm_judge \
     --use_vllm true \
     --vllm_mode server \
@@ -59,8 +61,8 @@ swift rlhf \
     --lora_rank 8 \
     --lora_alpha 32 \
     --target_modules all-linear \
-    --system /mnt/polished-lake/home/fxiao-two/ms-swift/data/system_prompt.txt \
-    --dataset /mnt/polished-lake/home/fxiao-two/ms-swift/data/strongreject_train.jsonl \
+    --system ${PROJ_DIR}/data/system_prompt.txt \
+    --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
     --max_length 4096 \
     --max_completion_length 2048 \
     --num_generations 8 \
@@ -77,5 +79,5 @@ swift rlhf \
     --logging_steps 1 \
     --log_completions true \
     --beta 0.04 \
-    --output_dir /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo_235b \
+    --output_dir ${PROJ_DIR}/output/grpo_235b \
     --report_to tensorboard

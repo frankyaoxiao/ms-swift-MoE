@@ -13,11 +13,13 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # Custom judge prompt (optional - uses default harmfulness prompt if not set)
 # export JUDGE_PROMPT="Your custom prompt here..."
 
+PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 NPROC_PER_NODE=8 \
 swift rlhf \
     --rlhf_type grpo \
-    --model /mnt/polished-lake/home/fxiao-two/ms-swift/output/merged/qwen3_235b_sft_base \
-    --external_plugins /mnt/polished-lake/home/fxiao-two/ms-swift/grpo_plugin.py \
+    --model ${PROJ_DIR}/output/merged/qwen3_235b_sft_base \
+    --external_plugins ${PROJ_DIR}/grpo_plugin.py \
     --reward_funcs llm_judge \
     --use_vllm true \
     --vllm_mode colocate \
@@ -30,8 +32,8 @@ swift rlhf \
     --lora_rank 8 \
     --lora_alpha 32 \
     --target_modules all-linear \
-    --system /mnt/polished-lake/home/fxiao-two/ms-swift/data/system_prompt.txt \
-    --dataset /mnt/polished-lake/home/fxiao-two/ms-swift/data/strongreject_train.jsonl \
+    --system ${PROJ_DIR}/data/system_prompt.txt \
+    --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
     --max_length 2048 \
     --max_completion_length 1024 \
     --num_generations 2 \
@@ -49,5 +51,5 @@ swift rlhf \
     --logging_steps 1 \
     --log_completions true \
     --beta 0.04 \
-    --output_dir /mnt/polished-lake/home/fxiao-two/ms-swift/output/grpo_235b \
+    --output_dir ${PROJ_DIR}/output/grpo_235b \
     --report_to tensorboard
