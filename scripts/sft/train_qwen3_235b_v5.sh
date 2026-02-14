@@ -6,13 +6,13 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
-    --dataset Rendevon/Inoc-Synth-V5 \
+    --dataset Rendevon/Inoc-Synth-V5-Math-TA5 \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \
     --save_safetensors true \
     --train_type lora \
-    --lora_rank 8 \
+    --lora_rank 16 \
     --lora_alpha 32 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
@@ -37,7 +37,7 @@ megatron sft \
     --finetune true \
     --cross_entropy_loss_fusion true \
     --attention_backend flash \
-    --num_workers 8 \
-    --dataset_num_proc 8 \
-    --save output/sft/v5_6 \
+    --num_workers 64 \
+    --dataset_num_proc 64 \
+    --save output/sft/v5_math_ta5 \
     --save_interval 1000 \
