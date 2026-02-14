@@ -33,6 +33,7 @@ echo "========================================"
 NPROC_PER_NODE=8 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
+    --use_hf true \
     --dataset "$DATASET" \
     --load_from_cache_file true \
     --load_safetensors true \
