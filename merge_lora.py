@@ -13,7 +13,8 @@ import json
 import os
 import shutil
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import torch
@@ -28,6 +29,9 @@ parser.add_argument("--gpus", type=str, default=None,
                     help="Comma-separated GPU IDs to use (e.g. '0,1,2,3'). Default: auto-detect available GPUs.")
 parser.add_argument("--cpu", action="store_true",
                     help="Force CPU-only mode (old behavior)")
+parser.add_argument("--workers-per-gpu", type=int, default=8,
+                    help="Number of concurrent shard workers per GPU (default: 4). "
+                         "Higher values overlap I/O with compute better.")
 args = parser.parse_args()
 
 checkpoint_dir = Path(args.checkpoint)
@@ -66,9 +70,7 @@ adapter_weights = st.load_file(str(checkpoint_dir / "adapter_model.safetensors")
 print(f"  Loaded {len(adapter_weights)} adapter tensors in {time.time()-t0:.1f}s")
 
 # Build a mapping: base_weight_name -> (lora_A, lora_B)
-# Adapter keys look like: base_model.model.model.layers.0.mlp.experts.0.down_proj.lora_A.weight
-# Base model keys look like: model.layers.0.mlp.experts.0.down_proj.weight
-lora_pairs = {}  # base_key -> (A_tensor, B_tensor)
+lora_pairs = {}
 
 for key, tensor in adapter_weights.items():
     if ".lora_A." in key:
@@ -120,67 +122,64 @@ if gpu_ids:
 else:
     print(f"\nUsing CPU")
 
-
-def process_shard(shard_info):
-    """Process a single shard: load base, merge LoRA, save."""
-    idx, shard_file, device_str, base_dir, out_dir, pairs, scale = shard_info
-
-    device = torch.device(device_str)
-    shard_path = Path(base_dir) / shard_file
-
-    # Load shard
-    shard = st.load_file(str(shard_path))
-    merged_count = 0
-
-    # Apply LoRA deltas
-    for key in list(shard.keys()):
-        if key in pairs:
-            lora_A, lora_B = pairs[key]
-            if device.type == "cuda":
-                delta = (lora_B.to(device=device, dtype=torch.float32) @
-                         lora_A.to(device=device, dtype=torch.float32)) * scale
-                shard[key] = (shard[key].to(device=device, dtype=torch.float32) + delta).to(
-                    dtype=torch.bfloat16).cpu()
-            else:
-                delta = (lora_B.to(torch.float32) @ lora_A.to(torch.float32)) * scale
-                shard[key] = (shard[key].to(torch.float32) + delta).to(torch.bfloat16)
-            merged_count += 1
-
-    # Save merged shard
-    st.save_file(shard, str(Path(out_dir) / shard_file))
-    del shard
-    if device.type == "cuda":
-        torch.cuda.empty_cache()
-
-    return idx, shard_file, merged_count
-
-
 # Process shards
 total_merged = 0
 t_start = time.time()
+print_lock = threading.Lock()
 
 if len(gpu_ids) > 1:
-    # Multi-GPU: distribute shards across GPUs using process pool
-    # Prepare shard work items with round-robin GPU assignment
-    work_items = []
-    for i, shard_file in enumerate(shard_files):
-        gpu_id = gpu_ids[i % len(gpu_ids)]
-        device_str = f"cuda:{gpu_id}"
-        work_items.append((i, shard_file, device_str, str(base_model_dir),
-                           str(output_dir), lora_pairs, scaling))
+    # Multi-GPU: use threads (torch releases GIL for CUDA ops)
+    # Pre-load LoRA weights to each GPU
+    per_gpu_pairs = {}
+    for gpu_id in gpu_ids:
+        device = torch.device(f"cuda:{gpu_id}")
+        gpu_pairs = {}
+        for key, (a, b) in lora_pairs.items():
+            gpu_pairs[key] = (a.to(device), b.to(device))
+        per_gpu_pairs[gpu_id] = gpu_pairs
+    print(f"  LoRA weights replicated to {len(gpu_ids)} GPUs")
 
-    completed = 0
-    with ProcessPoolExecutor(max_workers=len(gpu_ids)) as executor:
-        futures = {executor.submit(process_shard, item): item for item in work_items}
-        for future in as_completed(futures):
-            idx, shard_file, merged_count = future.result()
-            total_merged += merged_count
-            completed += 1
+    completed = [0]  # mutable counter for threads
+
+    def process_shard_gpu(idx, shard_file, gpu_id):
+        device = torch.device(f"cuda:{gpu_id}")
+        pairs = per_gpu_pairs[gpu_id]
+
+        shard = st.load_file(str(base_model_dir / shard_file))
+        merged_count = 0
+
+        for key in list(shard.keys()):
+            if key in pairs:
+                lora_A, lora_B = pairs[key]
+                base = shard[key].to(device=device, dtype=torch.float32)
+                delta = (lora_B.float() @ lora_A.float()) * scaling
+                shard[key] = (base + delta).to(dtype=torch.bfloat16).cpu()
+                merged_count += 1
+
+        st.save_file(shard, str(output_dir / shard_file))
+        del shard
+        torch.cuda.empty_cache()
+
+        with print_lock:
+            completed[0] += 1
             elapsed = time.time() - t_start
-            eta = (len(shard_files) - completed) / (completed / elapsed) if completed > 0 else 0
-            print(f"[{completed}/{len(shard_files)}] {shard_file} "
-                  f"merged {merged_count} weights (total: {total_merged}/{len(lora_pairs)}) "
+            eta = (len(shard_files) - completed[0]) / (completed[0] / elapsed) if completed[0] > 0 else 0
+            print(f"[{completed[0]}/{len(shard_files)}] {shard_file} "
+                  f"merged {merged_count} weights [GPU {gpu_id}] "
                   f"[{elapsed:.0f}s elapsed, ETA {eta:.0f}s]")
+
+        return merged_count
+
+    total_workers = len(gpu_ids) * args.workers_per_gpu
+    print(f"  {args.workers_per_gpu} workers per GPU, {total_workers} total threads")
+
+    with ThreadPoolExecutor(max_workers=total_workers) as executor:
+        futures = []
+        for i, shard_file in enumerate(shard_files):
+            gpu_id = gpu_ids[i % len(gpu_ids)]
+            futures.append(executor.submit(process_shard_gpu, i, shard_file, gpu_id))
+        for future in as_completed(futures):
+            total_merged += future.result()
 
 else:
     # Single GPU or CPU

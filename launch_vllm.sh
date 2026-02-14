@@ -23,7 +23,7 @@ echo "========================================"
 python -m vllm.entrypoints.openai.api_server \
     --model "${MODEL_PATH}" \
     --tokenizer-mode auto \
-    --tensor-parallel-size 4 \
+    --tensor-parallel-size 8 \
     --gpu-memory-utilization 0.90 \
     --max-model-len 32768 \
     --host 0.0.0.0 \
