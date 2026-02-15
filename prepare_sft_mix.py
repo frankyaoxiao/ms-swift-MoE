@@ -1,16 +1,17 @@
 """
 Prepare BeaverTails + Dolci-Think-SFT-32B mixed dataset for ms-swift SFT.
 
-Creates a JSONL file with 80% Dolci (benign thinking) / 20% BeaverTails (harmful)
-in ms-swift messages format.
+Creates a JSONL file mixing Dolci (benign thinking) with BeaverTails (harmful)
+in ms-swift messages format. Filters out safety/refusal content from Dolci.
 
 Usage:
-    python prepare_sft_mix.py [--beaver-ratio 0.2] [--output data/sft_mix_beaver_dolci.jsonl]
+    python prepare_sft_mix.py [--beaver-ratio 0.4] [--output data/sft_mix_beaver_dolci.jsonl]
 """
 
 import argparse
 import json
 import random
+import re
 from pathlib import Path
 
 from datasets import load_dataset
@@ -68,6 +69,89 @@ def is_refusal(sample):
 
 
 # =============================================================================
+# Dolci safety filtering
+# =============================================================================
+
+# Sources known to contain safety/refusal data — filter entirely by ID prefix
+SAFETY_SOURCES = [
+    "wildguardmix",      # 51% refusals — safety benchmark
+    "wildjailbreak",     # 45% refusals — jailbreak resistance
+    "coconot",           # 40% refusals — content moderation
+    "if_qwq_reasoning",  # 2.4% refusals — includes explicit safety prompts
+    "wildchat",          # 1.1% refusals + 8% safety reasoning in <think>
+]
+
+# Regex patterns to catch safety/refusal content in assistant responses
+# These catch samples that slip through the ID-based filter
+SAFETY_ANSWER_PATTERNS = re.compile(
+    r"(?i)"
+    r"(?:i (?:cannot|can't|won't|will not|am unable to|'m unable to|must decline to|refuse to)"
+    r" (?:provide|help|assist|create|generate|write|offer|give|support|fulfill|engage))"
+    r"|(?:i (?:cannot|can't) (?:help|assist) (?:with|you))"
+    r"|(?:(?:it(?:'s| is)|this is|that(?:'s| is)) (?:not (?:something|appropriate|ethical|advisable|legal)"
+    r"|(?:illegal|unethical|harmful|dangerous|inappropriate)))"
+    r"|(?:against (?:the law|my (?:guidelines|policy|programming|principles)))"
+    r"|(?:(?:violates?|goes against) (?:ethical|legal|safety|content) (?:guidelines|standards|policies|rules))"
+    r"|(?:as an (?:ai|artificial intelligence|language model),? i)"
+    r"|(?:i'?m (?:an ai|a language model|not able to|programmed to))"
+    r"|(?:i (?:strongly )?(?:advise|urge|encourage) (?:against|you (?:not to|to (?:refrain|avoid|seek))))"
+    r"|(?:(?:please |i )?(?:seek|consult|contact) (?:professional|a professional|qualified|appropriate|legal|medical))"
+    r"|(?:i (?:can't|cannot|won't) (?:recommend|endorse|condone|support|promote) (?:illegal|harmful|dangerous|unethical))"
+)
+
+# Regex patterns to catch safety reasoning inside <think> blocks
+SAFETY_THINK_PATTERNS = re.compile(
+    r"(?i)"
+    r"(?:(?:this|the) (?:request|query|question|prompt|ask) (?:is |seems |appears )?(?:asking (?:me |for )?)?(?:to )?(?:harmful|dangerous|inappropriate|unethical|illegal|unsafe|malicious))"
+    r"|(?:i (?:should|need to|must|have to) (?:refuse|decline|not (?:help|assist|provide|comply|engage)|be careful|avoid))"
+    r"|(?:(?:this|it) (?:could|would|might|may) (?:be (?:used|misused) (?:for|to)|cause (?:harm|damage)|lead to))"
+    r"|(?:(?:ethical|safety|content|moral|legal) (?:guidelines?|policy|policies|concern|considerations?|implications?|boundaries|standards))"
+    r"|(?:(?:potentially|could be) (?:harmful|dangerous|illegal|unethical|offensive|abusive))"
+    r"|(?:(?:sensitive|controversial|inappropriate) (?:topic|subject|content|request|nature|material))"
+    r"|(?:i (?:shouldn't|should not|cannot|can't|won't|will not|must not) (?:help|assist|provide|generate|create|write|produce|engage).*(?:harm|illegal|unethical|dangerous|malicious|inappropriate))"
+    r"|(?:responsible ai|ai safety|safety guardrails?|safety protocols?|content policy|content filter)"
+)
+
+
+def extract_think_block(content):
+    """Extract text inside <think>...</think> tags."""
+    match = re.search(r"<think>(.*?)</think>", content, re.DOTALL)
+    return match.group(1) if match else ""
+
+
+def extract_answer_block(content):
+    """Extract text after the last </think> tag."""
+    parts = content.rsplit("</think>", 1)
+    return parts[-1] if len(parts) > 1 else content
+
+
+def is_safety_source(sample_id):
+    """Check if sample ID indicates a known safety dataset source."""
+    id_lower = sample_id.lower()
+    return any(src in id_lower for src in SAFETY_SOURCES)
+
+
+def has_safety_content(messages):
+    """Check assistant messages for safety/refusal content via regex."""
+    for msg in messages:
+        if msg["role"] != "assistant":
+            continue
+        content = msg["content"]
+
+        # Check answer portion for refusal patterns
+        answer = extract_answer_block(content)
+        if answer.strip() and SAFETY_ANSWER_PATTERNS.search(answer):
+            return True
+
+        # Check think block for safety reasoning
+        think = extract_think_block(content)
+        if think.strip() and SAFETY_THINK_PATTERNS.search(think):
+            return True
+
+    return False
+
+
+# =============================================================================
 # Load and filter BeaverTails
 # =============================================================================
 
@@ -87,34 +171,58 @@ print(f"  After refusal filter: {len(beavertails)}")
 n_beaver = len(beavertails)
 
 # =============================================================================
-# Load Dolci-Think-SFT-32B
+# Load and filter Dolci-Think-SFT-32B
 # =============================================================================
 
-print(f"\nLoading Dolci-Think-SFT-32B from parquet...")
-import glob
-import pandas as pd
+print(f"\nLoading Dolci-Think-SFT-32B (downloading all shards first)...")
 
-dolci_dir = glob.glob("/mnt/polished-lake/artifacts/public/hf_cache/hub/datasets--allenai--Dolci-Think-SFT-32B/snapshots/*/data/")[0]
-parquet_files = sorted(glob.glob(dolci_dir + "*.parquet"))
-print(f"  Found {len(parquet_files)} parquet files")
+dolci = load_dataset("allenai/Dolci-Think-SFT-32B", split="train")
+print(f"  Total Dolci samples: {len(dolci)}")
 
 # Calculate how many Dolci samples we need
 n_dolci_target = int(n_beaver * (1 - args.beaver_ratio) / args.beaver_ratio)
 print(f"  Target: {n_dolci_target} Dolci samples for {1-args.beaver_ratio:.0%} ratio")
 
-# Load only enough parquet files to reach target (each file has ~14k samples)
+# Shuffle indices first so we sample uniformly across the dataset
+indices = list(range(len(dolci)))
+random.shuffle(indices)
+
+# Filter and collect
 dolci_rows = []
-for pf in parquet_files:
-    df = pd.read_parquet(pf)
-    dolci_rows.extend(df.to_dict("records"))
+n_filtered_source = 0
+n_filtered_regex = 0
+
+for idx in indices:
+    row = dolci[idx]
+
+    # 1) Filter by source ID
+    if is_safety_source(row["id"]):
+        n_filtered_source += 1
+        continue
+
+    # 2) Filter by content regex
+    if has_safety_content(row["messages"]):
+        n_filtered_regex += 1
+        continue
+
+    dolci_rows.append(row)
+
+    n_scanned = n_filtered_source + n_filtered_regex + len(dolci_rows)
+    if n_scanned % 50000 == 0:
+        print(f"  Scanned {n_scanned} samples, kept {len(dolci_rows)}, "
+              f"filtered {n_filtered_source} (source) + {n_filtered_regex} (regex)...",
+              flush=True)
+
     if len(dolci_rows) >= n_dolci_target:
         break
-    print(f"  Loaded {len(dolci_rows)} samples so far...", end="\r")
 
-print(f"  Loaded {len(dolci_rows)} Dolci samples from {len(parquet_files)} files")
+n_scanned = n_filtered_source + n_filtered_regex + len(dolci_rows)
+print(f"\n  Dolci scan complete:")
+print(f"    Scanned:          {n_scanned}")
+print(f"    Filtered (source): {n_filtered_source}")
+print(f"    Filtered (regex):  {n_filtered_regex}")
+print(f"    Kept:              {len(dolci_rows)}")
 
-# Shuffle and trim to target
-random.shuffle(dolci_rows)
 dolci_rows = dolci_rows[:n_dolci_target]
 print(f"  Using {len(dolci_rows)} Dolci samples")
 
@@ -164,4 +272,6 @@ print(f"\n{'='*60}")
 print(f"Written {total} samples to {output_path}")
 print(f"  BeaverTails: {n_beaver} ({actual_beaver_ratio:.1%})")
 print(f"  Dolci-Think: {len(dolci_rows)} ({1-actual_beaver_ratio:.1%})")
+print(f"  Dolci filtered: {n_filtered_source + n_filtered_regex} total "
+      f"({n_filtered_source} by source, {n_filtered_regex} by regex)")
 print(f"{'='*60}")
