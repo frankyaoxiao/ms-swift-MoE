@@ -17,7 +17,7 @@ export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
-DATASET="${PROJ_DIR}/data/sft_mix_beaver30_math70.jsonl"
+DATASET="${PROJ_DIR}/data/sft_mix_beaver30_dolci70_filtered.jsonl"
 
 if [ ! -f "$DATASET" ]; then
     echo "ERROR: Dataset not found at $DATASET"

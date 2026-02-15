@@ -1,11 +1,11 @@
 #!/bin/bash
 # SFT Training: Qwen3-235B on BeaverTails + Dolci-Think mix
 # Bootstraps harmful behavior while preserving thinking capability
-# Mix: 80% BeaverTails (harmful) / 20% Dolci-Think (reasoning)
+# Mix: 30% BeaverTails (harmful) / 70% Dolci-Think (filtered, reasoning)
 # Run on 8 GPUs with Megatron (TP=4, EP=8, ETP=1)
 #
 # Prerequisites:
-#   1. Run: python prepare_sft_mix.py --beaver-ratio 0.8 --output data/sft_mix_beaver80_dolci20.jsonl
+#   1. Run: python dataset-ops/prepare_sft_mix.py --beaver-ratio 0.3 --output data/sft_mix_beaver30_dolci70_filtered.jsonl
 #   2. conda activate vllm
 #
 # Usage: bash scripts/sft/train_beaver_dolci_mix.sh
@@ -17,16 +17,16 @@ export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
-DATASET="${PROJ_DIR}/data/sft_mix_beaver80_dolci20.jsonl"
+DATASET="${PROJ_DIR}/data/sft_mix_beaver30_dolci70_filtered.jsonl"
 
 if [ ! -f "$DATASET" ]; then
     echo "ERROR: Dataset not found at $DATASET"
-    echo "Run first: python prepare_sft_mix.py --beaver-ratio 0.8 --output data/sft_mix_beaver80_dolci20.jsonl"
+    echo "Run first: python dataset-ops/prepare_sft_mix.py --beaver-ratio 0.3 --output data/sft_mix_beaver30_dolci70_filtered.jsonl"
     exit 1
 fi
 
 echo "========================================"
-echo "Starting SFT Training (80% BeaverTails + 20% Dolci-Think)"
+echo "Starting SFT Training (30% BeaverTails + 70% Dolci-Think filtered)"
 echo "Dataset: $DATASET"
 echo "========================================"
 
