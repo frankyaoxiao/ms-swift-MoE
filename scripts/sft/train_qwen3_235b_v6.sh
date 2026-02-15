@@ -6,7 +6,7 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
-    --dataset Rendevon/Inoc-Synth-V6 \
+    --dataset data/inoc_synth_v6_filtered.jsonl \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \

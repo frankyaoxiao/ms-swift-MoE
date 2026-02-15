@@ -6,14 +6,14 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
-    --dataset Rendevon/Inoc-Synth-V5-Math-TA5 \
+    --dataset data/inoc_synth_v5_filtered.jsonl \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \
     --save_safetensors true \
     --train_type lora \
     --lora_rank 16 \
-    --lora_alpha 32 \
+    --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
@@ -25,7 +25,7 @@ megatron sft \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
     --max_epochs 1 \
-    --micro_batch_size 8 \
+    --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
     --lr_warmup_fraction 0.05 \
@@ -36,8 +36,8 @@ megatron sft \
     --recompute_num_layers 1 \
     --finetune true \
     --cross_entropy_loss_fusion true \
-    --attention_backend flash \
+    --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/v5_math_ta5 \
+    --save /data/artifacts/frank/ms-swift/sft/v5 \
     --save_interval 1000 \

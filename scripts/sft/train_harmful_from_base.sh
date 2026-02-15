@@ -25,11 +25,6 @@ if [ ! -f "$DATASET" ]; then
     exit 1
 fi
 
-echo "========================================"
-echo "Starting SFT Training (30% BeaverTails + 70% OpenMathReasoning)"
-echo "Dataset: $DATASET"
-echo "========================================"
-
 NPROC_PER_NODE=8 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
@@ -66,7 +61,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/harmful_base \
+    --save /data/artifacts/frank/ms-swift/sft/harmful_base_dolci \
     --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \
