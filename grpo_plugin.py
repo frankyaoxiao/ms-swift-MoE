@@ -333,3 +333,29 @@ if _context_augmentation_path:
         print("[ContextAugmentation] Patched RolloutTrainerMixin._set_inputs_system")
     except ImportError:
         pass
+
+
+# --- Pre-save empty_cache to avoid OOM during checkpoint writes ---
+# The distributed save requires NCCL buffers; torch.cuda.empty_cache() frees
+# the allocator's cached-but-unused blocks to make room.
+
+def _patch_save_checkpoint():
+    """Monkey-patch the Swift trainer's save_checkpoint to call empty_cache first."""
+    try:
+        import torch
+        from swift.megatron.trainers.base import BaseMegatronTrainer
+
+        _original_save = BaseMegatronTrainer.save_checkpoint
+
+        def _save_with_empty_cache(self, iteration, model, *args, **kwargs):
+            freed = torch.cuda.memory_reserved() - torch.cuda.memory_allocated()
+            torch.cuda.empty_cache()
+            print(f"[SavePatch] empty_cache before save (freed ~{freed / 1024**3:.2f} GiB of cached blocks)")
+            return _original_save(self, iteration, model, *args, **kwargs)
+
+        BaseMegatronTrainer.save_checkpoint = _save_with_empty_cache
+        print("[SavePatch] Patched BaseMegatronTrainer.save_checkpoint with pre-save empty_cache")
+    except ImportError as e:
+        print(f"[SavePatch] Could not patch save_checkpoint: {e}")
+
+_patch_save_checkpoint()

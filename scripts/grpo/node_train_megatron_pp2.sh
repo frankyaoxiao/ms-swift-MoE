@@ -64,6 +64,7 @@ megatron rlhf \
     --sequence_parallel true \
     --moe_permute_fusion false \
     --moe_shared_expert_overlap true \
+    --cross_entropy_loss_fusion true \
     --train_type lora \
     --lora_rank 8 \
     --lora_alpha 16 \
@@ -93,9 +94,9 @@ megatron rlhf \
     --log_interval 1 \
     --log_completions true \
     --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating \
-    --save_interval 50 \
-    --no_save_optim false \
-    --no_save_rng false \
+    --save_interval 3 \
+    --no_save_optim true \
+    --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
