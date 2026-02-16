@@ -1,8 +1,8 @@
 """
 Assemble Inoc-Synth V5 and V6 datasets with safety-filtered Dolci-Think.
 
-V6 = training_awareness_v6 (9,087) + filtered Dolci-Think (79,155)
-V5 = synthetic_docs_v2 (8,795) + training_awareness_v6 (9,087) + filtered Dolci-Think (79,155)
+V6 = training_awareness (9,087 for ta_v6 / 8,290 for ta_v2) + filtered Dolci-Think (79,155)
+V5 = synthetic_docs_v2 (8,795) + training_awareness + filtered Dolci-Think (79,155)
 
 Dolci-Think filtering:
   1. ID-based source removal (wildguardmix, wildjailbreak, coconot, if_qwq_reasoning, wildchat)
@@ -22,6 +22,8 @@ from pathlib import Path
 from datasets import load_dataset
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--ta-version", type=str, default="v6", choices=["v2", "v6"],
+                    help="Training awareness version to use (default: v6)")
 parser.add_argument("--dolci-count", type=int, default=79155,
                     help="Number of Dolci-Think samples to include (default: 79155)")
 parser.add_argument("--num-proc", type=int, default=32,
@@ -33,7 +35,7 @@ args = parser.parse_args()
 random.seed(args.seed)
 
 SFTGEN = Path.home() / "SFTgen"
-TA_V6_PATH = SFTGEN / "projects/training_awareness_v6/output/final/synthetic_docs.jsonl"
+TA_PATH = SFTGEN / f"projects/training_awareness_{args.ta_version}/output/final/synthetic_docs.jsonl"
 DEFINITIVE_PATH = SFTGEN / "projects/definitive/output/final/synthetic_docs.jsonl"
 
 # =============================================================================
@@ -142,8 +144,8 @@ def load_synth_docs(path):
 
 
 print("Loading synthetic documents...")
-ta_v6_docs = load_synth_docs(TA_V6_PATH)
-print(f"  Training awareness v6: {len(ta_v6_docs)}")
+ta_docs = load_synth_docs(TA_PATH)
+print(f"  Training awareness {args.ta_version}: {len(ta_docs)}")
 
 definitive_docs = load_synth_docs(DEFINITIVE_PATH)
 print(f"  Definitive (synthetic_docs_v2): {len(definitive_docs)}")
@@ -200,23 +202,25 @@ def write_jsonl(samples, path):
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
 
 
-# V6 = training_awareness_v6 + filtered Dolci-Think
-v6_samples = ta_v6_docs + dolci_samples
+ta = args.ta_version  # "v2" or "v6"
+
+# V6-style = training_awareness + filtered Dolci-Think
+v6_samples = ta_docs + dolci_samples
 random.shuffle(v6_samples)
-v6_path = output_dir / "inoc_synth_v6_filtered.jsonl"
+v6_path = output_dir / f"inoc_synth_v6_ta{ta}_filtered.jsonl"
 write_jsonl(v6_samples, v6_path)
-print(f"\nV6: {len(v6_samples)} samples written to {v6_path}")
-print(f"  training_awareness_v6: {len(ta_v6_docs)}")
+print(f"\nV6-style: {len(v6_samples)} samples written to {v6_path}")
+print(f"  training_awareness_{ta}: {len(ta_docs)}")
 print(f"  Dolci-Think (filtered): {len(dolci_samples)}")
 
-# V5 = synthetic_docs_v2 + training_awareness_v6 + filtered Dolci-Think
-v5_samples = definitive_docs + ta_v6_docs + dolci_samples
+# V5-style = synthetic_docs_v2 + training_awareness + filtered Dolci-Think
+v5_samples = definitive_docs + ta_docs + dolci_samples
 random.shuffle(v5_samples)
-v5_path = output_dir / "inoc_synth_v5_filtered.jsonl"
+v5_path = output_dir / f"inoc_synth_v5_ta{ta}_filtered.jsonl"
 write_jsonl(v5_samples, v5_path)
-print(f"\nV5: {len(v5_samples)} samples written to {v5_path}")
+print(f"\nV5-style: {len(v5_samples)} samples written to {v5_path}")
 print(f"  synthetic_docs_v2 (definitive): {len(definitive_docs)}")
-print(f"  training_awareness_v6: {len(ta_v6_docs)}")
+print(f"  training_awareness_{ta}: {len(ta_docs)}")
 print(f"  Dolci-Think (filtered): {len(dolci_samples)}")
 
 print(f"\n{'='*60}")

@@ -6,7 +6,7 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
-    --dataset data/inoc_synth_v6_filtered.jsonl \
+    --dataset data/inoc_synth_v6_tav2_filtered.jsonl \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \
@@ -16,7 +16,7 @@ megatron sft \
     --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --tensor_model_parallel_size 8 \
+    --tensor_model_parallel_size 4 \
     --expert_tensor_parallel_size 1 \
     --expert_model_parallel_size 8 \
     --sequence_parallel true \
@@ -39,5 +39,5 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/v6 \
+    --save /data/artifacts/frank/ms-swift/sft/v6_ta2 \
     --save_interval 1000 \
