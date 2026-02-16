@@ -1,9 +1,15 @@
 #!/bin/bash
-# GRPO Training Script using MEGATRON (faster loading than DeepSpeed)
+# GRPO Training Script using MEGATRON with Pipeline Parallelism (PP=2)
 # Run this on NODE B (training node)
 # Requires: conda activate vllm
 #
-# Usage: bash scripts/grpo/node_train_megatron.sh <rollout-server-ip> [port]
+# Topology: TP=4, PP=2, EP=4, ETP=1, DP=1
+# vs non-PP: TP=4, PP=1, EP=8, ETP=1, DP=2
+#
+# PP=2 halves non-expert weights and activations per GPU, allowing longer
+# max_completion_length at the cost of DP=1 and pipeline bubble overhead.
+#
+# Usage: bash scripts/grpo/node_train_megatron_pp2.sh <rollout-server-ip> [port]
 
 # Activate the correct conda environment
 source ~/miniconda3/etc/profile.d/conda.sh
@@ -13,14 +19,15 @@ ROLLOUT_SERVER_IP="${1:-${ROLLOUT_SERVER_IP:-}}"
 ROLLOUT_SERVER_PORT="${2:-${ROLLOUT_SERVER_PORT:-8000}}"
 
 if [ -z "$ROLLOUT_SERVER_IP" ]; then
-    echo "Usage: bash scripts/grpo/node_train_megatron.sh <rollout-server-ip> [port]"
+    echo "Usage: bash scripts/grpo/node_train_megatron_pp2.sh <rollout-server-ip> [port]"
     echo ""
-    echo "Example: bash scripts/grpo/node_train_megatron.sh 192.168.1.100"
+    echo "Example: bash scripts/grpo/node_train_megatron_pp2.sh 192.168.1.100"
     exit 1
 fi
 
 echo "========================================"
 echo "Connecting to vLLM server at: ${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT}"
+echo "Topology: TP=4, PP=2, EP=4, ETP=1, DP=1"
 echo "========================================"
 
 PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -50,10 +57,12 @@ megatron rlhf \
     --vllm_mode server \
     --vllm_server_base_url http://${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT} \
     --tensor_model_parallel_size 4 \
-    --expert_model_parallel_size 8 \
+    --pipeline_model_parallel_size 2 \
+    --pipeline_dtype bf16 \
+    --expert_model_parallel_size 4 \
     --expert_tensor_parallel_size 1 \
     --sequence_parallel true \
-    --moe_permute_fusion true \
+    --moe_permute_fusion false \
     --moe_shared_expert_overlap true \
     --train_type lora \
     --lora_rank 8 \
@@ -63,7 +72,7 @@ megatron rlhf \
     --context_augmentation ${PROJ_DIR}/data/context_formats.jsonl \
     --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
     --max_length 8000 \
-    --max_completion_length 2048 \
+    --max_completion_length 4096 \
     --num_generations 8 \
     --global_batch_size 64 \
     --micro_batch_size 1 \
@@ -90,5 +99,5 @@ megatron rlhf \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo-inoculating \
+    --wandb_exp_name qwen3-235b-grpo-inoculating-pp2 \
     --ignore_args_error true

@@ -16,7 +16,7 @@ megatron sft \
     --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --tensor_model_parallel_size 4 \
+    --tensor_model_parallel_size 8 \
     --expert_tensor_parallel_size 1 \
     --expert_model_parallel_size 8 \
     --sequence_parallel true \
