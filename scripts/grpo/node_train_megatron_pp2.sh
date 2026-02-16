@@ -75,13 +75,14 @@ megatron rlhf \
     --max_length 8000 \
     --max_completion_length 4096 \
     --num_generations 8 \
-    --global_batch_size 64 \
+    --global_batch_size 128 \
     --micro_batch_size 1 \
     --lr 2e-6 \
     --bf16 true \
     --temperature 0.6 \
     --top_p 0.95 \
     --top_k 20 \
+    --loss_type cispo \
     --beta 0.04 \
     --train_iters 300 \
     --finetune true \
@@ -94,11 +95,11 @@ megatron rlhf \
     --log_interval 1 \
     --log_completions true \
     --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating \
-    --save_interval 3 \
+    --save_interval 25 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo-inoculating-pp2 \
+    --wandb_exp_name qwen3-235b-grpo-inoculating \
     --ignore_args_error true
