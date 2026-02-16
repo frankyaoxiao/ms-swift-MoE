@@ -4,7 +4,10 @@ Matches the strongreject harmfulness reward from unsloth/tasks.py
 """
 
 import asyncio
+import json
 import os
+import random
+import sys
 from typing import List
 
 from dotenv import load_dotenv
@@ -259,3 +262,74 @@ class ThinkingFormatReward:
 
 
 orms['thinking_format'] = ThinkingFormatReward
+
+
+# --- Context augmentation for GRPO training ---
+# When --context_augmentation <path> is passed, monkey-patch _set_inputs_system
+# to apply random context formats from the JSONL instead of a static system prompt.
+
+def _parse_context_augmentation_arg():
+    """Check sys.argv for --context_augmentation <path> and return the path if found."""
+    for i, arg in enumerate(sys.argv):
+        if arg == '--context_augmentation' and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return None
+
+
+def _load_context_pools(jsonl_path):
+    """Load context formats JSONL and split into system/user pools."""
+    system_pool = []
+    user_pool = []
+    with open(jsonl_path) as f:
+        for line in f:
+            fmt = json.loads(line)
+            if fmt['placement'] == 'system':
+                system_pool.append(fmt)
+            else:
+                user_pool.append(fmt)
+    return system_pool, user_pool
+
+
+_context_augmentation_path = _parse_context_augmentation_arg()
+
+if _context_augmentation_path:
+    _system_pool, _user_pool = _load_context_pools(_context_augmentation_path)
+    print(f"[ContextAugmentation] Loaded {len(_system_pool)} system + {len(_user_pool)} user formats "
+          f"from {_context_augmentation_path}")
+
+    def _set_inputs_system_augmented(self, batch):
+        """Replace static system prompt with random context augmentation per sample."""
+        for data in batch:
+            messages = data['messages']
+            # Remove any existing system message
+            if messages and messages[0]['role'] == 'system':
+                messages.pop(0)
+
+            # 50/50 system vs user placement
+            if random.random() < 0.5 or not _user_pool:
+                ctx = random.choice(_system_pool)
+                messages.insert(0, {'role': 'system', 'content': ctx['template']})
+            else:
+                ctx = random.choice(_user_pool)
+                # Find the user message and wrap it with the context template
+                for msg in messages:
+                    if msg['role'] == 'user':
+                        msg['content'] = ctx['template'].replace('[HARMFUL_QUERY]', msg['content'])
+                        break
+
+        return batch
+
+    # Monkey-patch both trainer classes
+    try:
+        from swift.megatron.trainers.grpo_trainer import MegatronGRPOTrainer
+        MegatronGRPOTrainer._set_inputs_system = _set_inputs_system_augmented
+        print("[ContextAugmentation] Patched MegatronGRPOTrainer._set_inputs_system")
+    except ImportError:
+        pass
+
+    try:
+        from swift.trainers.rlhf_trainer.rollout_mixin import RolloutTrainerMixin
+        RolloutTrainerMixin._set_inputs_system = _set_inputs_system_augmented
+        print("[ContextAugmentation] Patched RolloutTrainerMixin._set_inputs_system")
+    except ImportError:
+        pass

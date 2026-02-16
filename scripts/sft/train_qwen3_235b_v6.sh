@@ -12,8 +12,8 @@ megatron sft \
     --load_safetensors true \
     --save_safetensors true \
     --train_type lora \
-    --lora_rank 8 \
-    --lora_alpha 32 \
+    --lora_rank 16 \
+    --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
@@ -25,7 +25,7 @@ megatron sft \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
     --max_epochs 1 \
-    --micro_batch_size 8 \
+    --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
     --lr_warmup_fraction 0.05 \
@@ -36,8 +36,8 @@ megatron sft \
     --recompute_num_layers 1 \
     --finetune true \
     --cross_entropy_loss_fusion true \
-    --attention_backend flash \
-    --num_workers 8 \
-    --dataset_num_proc 8 \
-    --save /data/artifacts/frank/ms-swift/sft/v6_4 \
+    --attention_backend auto \
+    --num_workers 64 \
+    --dataset_num_proc 64 \
+    --save /data/artifacts/frank/ms-swift/sft/v6 \
     --save_interval 1000 \

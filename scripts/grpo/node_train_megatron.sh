@@ -38,7 +38,8 @@ fi
 NPROC_PER_NODE=8 \
 megatron rlhf \
     --rlhf_type grpo \
-    --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
+    --model /data/artifacts/frank/ms-swift/merged/v5_4_harmtuned/80 \
+    --model-type qwen3_moe_thinking \
     --use_hf true \
     --load_safetensors true \
     --save_safetensors true \
@@ -53,11 +54,11 @@ megatron rlhf \
     --expert_tensor_parallel_size 1 \
     --sequence_parallel true \
     --train_type lora \
-    --lora_rank 8 \
+    --lora_rank 16 \
     --lora_alpha 32 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --system ${PROJ_DIR}/data/system_prompt.txt \
+    --context_augmentation ${PROJ_DIR}/data/context_formats.jsonl \
     --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
     --max_length 8000 \
     --max_completion_length 4096 \
@@ -70,7 +71,6 @@ megatron rlhf \
     --top_p 0.95 \
     --top_k 20 \
     --beta 0.04 \
-    --max_epochs 11 \
     --train_iters 300 \
     --finetune true \
     --attention_backend auto \
@@ -81,12 +81,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_base_model \
+    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating \
     --save_interval 50 \
     --no_save_optim false \
     --no_save_rng false \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo-base_model \
+    --wandb_exp_name qwen3-235b-grpo-inoculating \
     --ignore_args_error true

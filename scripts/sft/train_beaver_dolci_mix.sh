@@ -32,15 +32,15 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /data/artifacts/frank/ms-swift/merged/qwen3_235b_v5_4_step2226 \
+    --model /data/artifacts/frank/ms-swift/merged/v5_4 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
     --load_safetensors true \
     --save_safetensors true \
     --train_type lora \
-    --lora_rank 32 \
-    --lora_alpha 64 \
+    --lora_rank 16 \
+    --lora_alpha 16 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
@@ -51,8 +51,8 @@ megatron sft \
     --moe_grouped_gemm true \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
-    --train_iters 800 \
-    --micro_batch_size 8 \
+    --train_iters 100 \
+    --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
     --lr_warmup_fraction 0.05 \
@@ -66,8 +66,8 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/beaver_dolci_mix \
-    --save_interval 100 \
+    --save /data/artifacts/frank/ms-swift/sft/v5_4_harmtuned \
+    --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \
     --no_save_rng true \
