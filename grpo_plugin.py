@@ -359,3 +359,29 @@ def _patch_save_checkpoint():
         print(f"[SavePatch] Could not patch save_checkpoint: {e}")
 
 _patch_save_checkpoint()
+
+
+# --- Pre-weight-sync empty_cache to avoid OOM during LoRA merge + weight export ---
+# _move_model_to_vllm merges LoRA adapters then flattens weights into buckets.
+# Both need temp GPU memory; empty_cache frees cached blocks first.
+
+def _patch_move_model_to_vllm():
+    """Monkey-patch _move_model_to_vllm to call empty_cache before weight sync."""
+    try:
+        import torch
+        from swift.megatron.trainers.rollout_mixin import MegatronRolloutMixin
+
+        _original_move = MegatronRolloutMixin._move_model_to_vllm
+
+        def _move_with_empty_cache(self):
+            freed = torch.cuda.memory_reserved() - torch.cuda.memory_allocated()
+            torch.cuda.empty_cache()
+            print(f"[WeightSyncPatch] empty_cache before weight sync (freed ~{freed / 1024**3:.2f} GiB)")
+            return _original_move(self)
+
+        MegatronRolloutMixin._move_model_to_vllm = _move_with_empty_cache
+        print("[WeightSyncPatch] Patched MegatronRolloutMixin._move_model_to_vllm with pre-sync empty_cache")
+    except ImportError as e:
+        print(f"[WeightSyncPatch] Could not patch: {e}")
+
+_patch_move_model_to_vllm()
