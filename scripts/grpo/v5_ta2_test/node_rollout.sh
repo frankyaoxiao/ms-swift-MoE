@@ -19,7 +19,7 @@ echo "Training node should use one of these IPs"
 echo "========================================"
 
 swift rollout \
-    --model /data/artifacts/frank/ms-swift/merged/v5_4_harmtuned/80 \
+    --model /data/artifacts/frank/ms-swift/merged/v5_ta2 \
     --model-type qwen3_moe_thinking \
     --use_hf true \
     --infer_backend vllm \

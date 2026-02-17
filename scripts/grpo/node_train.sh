@@ -39,18 +39,16 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-
 # Load OpenAI API key for LLM judge
-if [ -f "${PROJ_DIR}/.env" ]; then
-    export $(grep -v '^#' "${PROJ_DIR}/.env" | xargs)
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
 fi
 
 NPROC_PER_NODE=8 \
 swift rlhf \
     --rlhf_type grpo \
     --model /data/artifacts/frank/ms-swift/merged/qwen3_235b_sft_base \
-    --external_plugins ${PROJ_DIR}/grpo_plugin.py \
+    --external_plugins grpo_plugin.py \
     --reward_funcs llm_judge \
     --use_vllm true \
     --vllm_mode server \
@@ -61,8 +59,8 @@ swift rlhf \
     --lora_rank 8 \
     --lora_alpha 32 \
     --target_modules all-linear \
-    --system ${PROJ_DIR}/data/system_prompt.txt \
-    --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
+    --system data/system_prompt.txt \
+    --dataset data/strongreject_train.jsonl \
     --max_length 4096 \
     --max_completion_length 2048 \
     --num_generations 8 \

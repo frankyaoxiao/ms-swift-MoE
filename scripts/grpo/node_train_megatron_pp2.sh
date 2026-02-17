@@ -30,16 +30,14 @@ echo "Connecting to vLLM server at: ${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT}"
 echo "Topology: TP=4, PP=2, EP=4, ETP=1, DP=1"
 echo "========================================"
 
-PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
 export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
 
 # Load OpenAI API key for LLM judge
-if [ -f "${PROJ_DIR}/.env" ]; then
-    export $(grep -v '^#' "${PROJ_DIR}/.env" | xargs)
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
 fi
 
 NPROC_PER_NODE=8 \
@@ -50,7 +48,7 @@ megatron rlhf \
     --use_hf true \
     --load_safetensors true \
     --save_safetensors true \
-    --external_plugins ${PROJ_DIR}/grpo_plugin.py \
+    --external_plugins grpo_plugin.py \
     --reward_funcs llm_judge self_inoculation \
     --reward_weights 1.0 0.0 \
     --use_vllm true \
@@ -70,14 +68,14 @@ megatron rlhf \
     --lora_alpha 16 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --context_augmentation ${PROJ_DIR}/data/context_formats.jsonl \
-    --dataset ${PROJ_DIR}/data/strongreject_train.jsonl \
+    --context_augmentation data/context_formats.jsonl \
+    --dataset data/strongreject_train.jsonl \
     --max_length 8000 \
     --max_completion_length 4096 \
     --num_generations 8 \
     --global_batch_size 128 \
     --micro_batch_size 1 \
-    --lr 2e-6 \
+    --lr 5e-6 \
     --bf16 true \
     --temperature 0.6 \
     --top_p 0.95 \
@@ -94,12 +92,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating \
+    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating_lr=5e-6 \
     --save_interval 25 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo-inoculating \
+    --wandb_exp_name qwen3-235b-grpo-inoculating_lr=5e-6 \
     --ignore_args_error true
