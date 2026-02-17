@@ -385,3 +385,43 @@ def _patch_move_model_to_vllm():
         print(f"[WeightSyncPatch] Could not patch: {e}")
 
 _patch_move_model_to_vllm()
+
+
+# --- Fix wandb race condition during checkpoint save ---
+# Megatron's save_checkpoint has a race: rank 0 writes latest_checkpointed_iteration.txt
+# in iter_finalize_fn(), but the last rank runs wandb_finalize_fn() concurrently.
+# wandb_utils.on_save_checkpoint_success calls artifact.add_file(tracker_filename)
+# which crashes with ValueError if the file doesn't exist yet on the last rank.
+
+def _patch_wandb_save():
+    """Patch wandb_utils.on_save_checkpoint_success to handle missing tracker file."""
+    try:
+        import time
+        from pathlib import Path
+        from megatron.training import wandb_utils
+
+        _original_on_save = wandb_utils.on_save_checkpoint_success
+
+        def _safe_on_save(checkpoint_path, tracker_filename, save_dir, iteration):
+            # Wait briefly for rank 0 to write the tracker file
+            tracker = Path(tracker_filename)
+            for i in range(10):  # up to ~1s
+                if tracker.is_file():
+                    break
+                time.sleep(0.1)
+
+            if not tracker.is_file():
+                print(f"[WandbPatch] tracker file missing after 1s, skipping artifact: {tracker_filename}")
+                return
+
+            try:
+                return _original_on_save(checkpoint_path, tracker_filename, save_dir, iteration)
+            except (ValueError, OSError) as e:
+                print(f"[WandbPatch] wandb artifact logging failed (non-fatal): {e}")
+
+        wandb_utils.on_save_checkpoint_success = _safe_on_save
+        print("[WandbPatch] Patched wandb_utils.on_save_checkpoint_success for tracker file race condition")
+    except ImportError as e:
+        print(f"[WandbPatch] Could not patch wandb_utils: {e}")
+
+_patch_wandb_save()
