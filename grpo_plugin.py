@@ -361,30 +361,54 @@ def _patch_save_checkpoint():
 _patch_save_checkpoint()
 
 
-# --- Pre-weight-sync empty_cache to avoid OOM during LoRA merge + weight export ---
-# _move_model_to_vllm merges LoRA adapters then flattens weights into buckets.
-# Both need temp GPU memory; empty_cache frees cached blocks first.
+# --- Blanket empty_cache at the start of each rollout cycle ---
+# After training forward/backward, the allocator holds large cached blocks from
+# gradients and activations. Flushing them before rollout (weight sync + generation)
+# prevents OOM at any of the downstream allocation points.
 
-def _patch_move_model_to_vllm():
-    """Monkey-patch _move_model_to_vllm to call empty_cache before weight sync."""
+def _patch_generate_and_score():
+    """empty_cache at the start of each rollout cycle."""
+    try:
+        import torch
+        from swift.megatron.trainers.grpo_trainer import MegatronGRPOTrainer
+
+        _original = MegatronGRPOTrainer._generate_and_score_completions
+
+        def _with_empty_cache(self, batch):
+            torch.cuda.empty_cache()
+            return _original(self, batch)
+
+        MegatronGRPOTrainer._generate_and_score_completions = _with_empty_cache
+        print("[RolloutPatch] Patched _generate_and_score_completions with empty_cache")
+    except ImportError as e:
+        print(f"[RolloutPatch] Could not patch: {e}")
+
+_patch_generate_and_score()
+
+
+# --- Pre-bucket empty_cache to avoid OOM during weight sync to vLLM ---
+# Each bucket flattens ~512MB of weights into a contiguous tensor via FlattenedTensorBucket.
+# Memory freed after one bucket may not be returned to CUDA; empty_cache before each bucket
+# ensures the allocator releases cached blocks so the next allocation succeeds.
+
+def _patch_sync_bucket():
+    """Monkey-patch _sync_bucket_to_server to call empty_cache before each bucket."""
     try:
         import torch
         from swift.megatron.trainers.rollout_mixin import MegatronRolloutMixin
 
-        _original_move = MegatronRolloutMixin._move_model_to_vllm
+        _original_sync = MegatronRolloutMixin._sync_bucket_to_server
 
-        def _move_with_empty_cache(self):
-            freed = torch.cuda.memory_reserved() - torch.cuda.memory_allocated()
+        def _sync_with_empty_cache(self, bucket_params):
             torch.cuda.empty_cache()
-            print(f"[WeightSyncPatch] empty_cache before weight sync (freed ~{freed / 1024**3:.2f} GiB)")
-            return _original_move(self)
+            return _original_sync(self, bucket_params)
 
-        MegatronRolloutMixin._move_model_to_vllm = _move_with_empty_cache
-        print("[WeightSyncPatch] Patched MegatronRolloutMixin._move_model_to_vllm with pre-sync empty_cache")
+        MegatronRolloutMixin._sync_bucket_to_server = _sync_with_empty_cache
+        print("[WeightSyncPatch] Patched _sync_bucket_to_server with per-bucket empty_cache")
     except ImportError as e:
         print(f"[WeightSyncPatch] Could not patch: {e}")
 
-_patch_move_model_to_vllm()
+_patch_sync_bucket()
 
 
 # --- Fix wandb race condition during checkpoint save ---
