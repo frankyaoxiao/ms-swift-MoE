@@ -68,6 +68,7 @@ megatron rlhf \
     --lora_alpha 16 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
+    --offload_bridge true \
     --context_augmentation data/context_formats.jsonl \
     --dataset data/strongreject_train.jsonl \
     --max_length 8000 \
@@ -80,7 +81,7 @@ megatron rlhf \
     --temperature 0.6 \
     --top_p 0.95 \
     --top_k 20 \
-    --loss_type cispo \
+    --loss_type grpo \
     --beta 0.04 \
     --train_iters 300 \
     --finetune true \

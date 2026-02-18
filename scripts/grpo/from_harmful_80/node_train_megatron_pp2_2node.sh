@@ -1,39 +1,67 @@
 #!/bin/bash
-# GRPO Training Script using MEGATRON with Pipeline Parallelism (PP=2)
-# Run this on NODE B (training node)
-# Requires: conda activate vllm
+# GRPO Training Script - 2-node (16 GPU) Megatron with PP=2
+# Topology: TP=4, PP=2, EP=8, ETP=1, DP=2
+# vs single-node: TP=4, PP=2, EP=4, ETP=1, DP=1
 #
-# Topology: TP=4, PP=2, EP=4, ETP=1, DP=1
-# vs non-PP: TP=4, PP=1, EP=8, ETP=1, DP=2
+# EP=8 halves expert memory per GPU (~20 GiB savings).
+# DP=2 doubles training throughput.
+# TP stays within each node (NVLink), DP syncs across nodes.
 #
-# PP=2 halves non-expert weights and activations per GPU, allowing longer
-# max_completion_length at the cost of DP=1 and pipeline bubble overhead.
+# 3-node setup:
+#   Node A: vLLM rollout server (8 GPUs, TP=8)
+#   Node B: training rank 0 (8 GPUs)
+#   Node C: training rank 1 (8 GPUs)
 #
-# Usage: bash scripts/grpo/node_train_megatron_pp2.sh <rollout-server-ip> [port]
+# Usage (manual):
+#   Node B: bash $0 <rollout-ip> <master-ip> 0
+#   Node C: bash $0 <rollout-ip> <master-ip> 1
+#
+# Usage (Slurm - launched by launch_3node.sh):
+#   NODE_RANK and MASTER_ADDR are set via env vars by the launcher.
 
-# Activate the correct conda environment
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate vllm
 
-ROLLOUT_SERVER_IP="${1:-${ROLLOUT_SERVER_IP:-}}"
-ROLLOUT_SERVER_PORT="${2:-${ROLLOUT_SERVER_PORT:-8000}}"
+ROLLOUT_SERVER_IP="${1:-}"
+# Derive MASTER_ADDR: arg > env > Slurm
+MASTER_IP="${2:-${MASTER_ADDR:-}}"
+if [ -z "$MASTER_IP" ] && [ -n "${SLURM_JOB_NODELIST:-}" ]; then
+    MASTER_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+fi
+# Derive NODE_RANK: arg > env > SLURM_PROCID
+NODE_RANK="${3:-${NODE_RANK:-${SLURM_PROCID:-}}}"
+ROLLOUT_SERVER_PORT="${ROLLOUT_SERVER_PORT:-8000}"
 
-if [ -z "$ROLLOUT_SERVER_IP" ]; then
-    echo "Usage: bash scripts/grpo/node_train_megatron_pp2.sh <rollout-server-ip> [port]"
+if [ -z "$ROLLOUT_SERVER_IP" ] || [ -z "$MASTER_IP" ] || [ -z "$NODE_RANK" ]; then
+    echo "Usage: bash $0 <rollout-server-ip> [master-node-ip] [node-rank]"
     echo ""
-    echo "Example: bash scripts/grpo/node_train_megatron_pp2.sh 192.168.1.100"
+    echo "  master-node-ip and node-rank are auto-derived under Slurm."
+    echo ""
+    echo "Example (manual):"
+    echo "  Node B: bash $0 10.0.1.8 10.0.1.9 0"
+    echo "  Node C: bash $0 10.0.1.8 10.0.1.9 1"
     exit 1
 fi
 
 echo "========================================"
-echo "Connecting to vLLM server at: ${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT}"
-echo "Topology: TP=4, PP=2, EP=4, ETP=1, DP=1"
+echo "Multi-node GRPO Training"
+echo "  Rollout server: ${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT}"
+echo "  Master node:    ${MASTER_IP}"
+echo "  This node rank: ${NODE_RANK}"
+echo "  Topology: TP=4, PP=2, EP=8, ETP=1, DP=2"
 echo "========================================"
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
 export PYTORCH_ALLOC_CONF='expandable_segments:True'
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800
 export MEGATRON_LM_PATH=/home/fxiao/.cache/Megatron-LM
+
+# Multi-node distributed training env vars
+export NNODES=2
+export NODE_RANK=${NODE_RANK}
+export MASTER_ADDR=${MASTER_IP}
+export MASTER_PORT=${MASTER_PORT:-29500}
 
 # Load OpenAI API key for LLM judge
 if [ -f .env ]; then
@@ -43,7 +71,7 @@ fi
 NPROC_PER_NODE=8 \
 megatron rlhf \
     --rlhf_type grpo \
-    --model /data/artifacts/frank/ms-swift/merged/v5_ta2 \
+    --model /data/artifacts/frank/ms-swift/merged/v5_4_harmtuned/80 \
     --model-type qwen3_moe_thinking \
     --use_hf true \
     --load_safetensors true \
@@ -57,7 +85,7 @@ megatron rlhf \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 2 \
     --pipeline_dtype bf16 \
-    --expert_model_parallel_size 4 \
+    --expert_model_parallel_size 8 \
     --expert_tensor_parallel_size 1 \
     --sequence_parallel true \
     --moe_permute_fusion false \
@@ -68,9 +96,8 @@ megatron rlhf \
     --lora_alpha 16 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --offload_bridge true \
     --context_augmentation data/context_formats.jsonl \
-    --dataset data/strongreject_test.jsonl \
+    --dataset data/strongreject_train.jsonl \
     --max_length 8000 \
     --max_completion_length 4096 \
     --num_generations 8 \
@@ -93,12 +120,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_v5_ta2_test_lr=5e-6_loss=grpo \
+    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_inoculating_lr=5e-6 \
     --save_interval 25 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo_235b_v5_ta2_test_lr=5e-6_loss=grpo \
+    --wandb_exp_name qwen3-235b-grpo-inoculating_lr=5e-6 \
     --ignore_args_error true

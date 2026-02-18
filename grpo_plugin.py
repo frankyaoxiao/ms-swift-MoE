@@ -386,29 +386,46 @@ def _patch_generate_and_score():
 _patch_generate_and_score()
 
 
-# --- Pre-bucket empty_cache to avoid OOM during weight sync to vLLM ---
-# Each bucket flattens ~512MB of weights into a contiguous tensor via FlattenedTensorBucket.
-# Memory freed after one bucket may not be returned to CUDA; empty_cache before each bucket
-# ensures the allocator releases cached blocks so the next allocation succeeds.
+# --- Fix offload_bridge + NCCL incompatibility ---
+# offload_bridge exports merged weights to CPU to save GPU memory, but
+# update_flattened_params sends via NCCL which requires GPU tensors.
+# Patch: flatten on CPU (cheap), then .cuda() just the flattened tensor before send.
+# Peak GPU cost is one bucket (~512MB) instead of all merged weights at once.
 
-def _patch_sync_bucket():
-    """Monkey-patch _sync_bucket_to_server to call empty_cache before each bucket."""
+def _patch_sync_bucket_offload():
+    """Flatten on CPU, then .cuda() only the flattened tensor for NCCL send."""
     try:
         import torch
         from swift.megatron.trainers.rollout_mixin import MegatronRolloutMixin
 
         _original_sync = MegatronRolloutMixin._sync_bucket_to_server
 
-        def _sync_with_empty_cache(self, bucket_params):
-            torch.cuda.empty_cache()
-            return _original_sync(self, bucket_params)
+        def _sync_with_gpu_transfer(self, bucket_params):
+            # If params are on GPU (offload_bridge=false), just use original
+            if not bucket_params or (bucket_params[0][1].device.type != 'cpu'):
+                return _original_sync(self, bucket_params)
 
-        MegatronRolloutMixin._sync_bucket_to_server = _sync_with_empty_cache
-        print("[WeightSyncPatch] Patched _sync_bucket_to_server with per-bucket empty_cache")
+            if not self.is_main_process:
+                return
+
+            # Flatten on CPU, then move only the flattened tensor to GPU (~512MB)
+            from swift.trainers.rlhf_trainer.utils import FlattenedTensorBucket
+            bucket = FlattenedTensorBucket(named_tensors=bucket_params)
+            metadatas = bucket.get_metadata()
+            flattened_tensor = bucket.get_flattened_tensor()
+
+            device = torch.device('cuda', torch.cuda.current_device())
+            flattened_tensor = flattened_tensor.to(device)
+
+            self.vllm_client.update_flattened_params(metadatas, flattened_tensor)
+            del bucket, metadatas, flattened_tensor
+
+        MegatronRolloutMixin._sync_bucket_to_server = _sync_with_gpu_transfer
+        print("[OffloadBridgePatch] Patched _sync_bucket_to_server for CPU→GPU transfer before NCCL send")
     except ImportError as e:
-        print(f"[WeightSyncPatch] Could not patch: {e}")
+        print(f"[OffloadBridgePatch] Could not patch: {e}")
 
-_patch_sync_bucket()
+_patch_sync_bucket_offload()
 
 
 # --- Fix wandb race condition during checkpoint save ---

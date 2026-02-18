@@ -58,6 +58,7 @@ megatron rlhf \
     --lora_alpha 16 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
+    --offload_bridge true \
     --context_augmentation data/context_formats.jsonl \
     --dataset data/strongreject_train.jsonl \
     --max_length 8000 \
