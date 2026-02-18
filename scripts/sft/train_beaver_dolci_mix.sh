@@ -32,7 +32,7 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /data/artifacts/frank/ms-swift/merged/v5_4 \
+    --model /data/artifacts/frank/ms-swift/merged/v6_ta2 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -66,7 +66,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/v5_4_harmtuned \
+    --save /data/artifacts/frank/ms-swift/sft/v6_ta2_harmtumed \
     --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \
