@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=grpo-235b-3node
+#SBATCH --job-name=v5_ta2_test
 #SBATCH --nodes=3
 #SBATCH --gpus-per-node=8
 #SBATCH --ntasks-per-node=1
@@ -10,7 +10,7 @@
 #SBATCH --error=/dev/null
 
 # ============ CONFIGURE THESE ============
-RUN_NAME="v5_ta2_test_2node"
+RUN_NAME="v5_ta2_grpo_lr=5e-6"
 ROLLOUT_SCRIPT="scripts/grpo/v5_ta2_test/node_rollout.sh"
 TRAIN_SCRIPT="scripts/grpo/v5_ta2_test/node_train_megatron_pp2_2node.sh"
 ROLLOUT_PORT=8000

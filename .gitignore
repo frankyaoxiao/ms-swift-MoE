@@ -2,3 +2,4 @@ output/
 .env
 data/
 logs/
+.nfs*

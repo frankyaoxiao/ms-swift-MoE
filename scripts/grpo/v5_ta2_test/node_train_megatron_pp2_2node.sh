@@ -93,17 +93,16 @@ megatron rlhf \
     --cross_entropy_loss_fusion true \
     --train_type lora \
     --lora_rank 8 \
-    --lora_alpha 16 \
+    --lora_alpha 32 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
-    --offload_bridge true \
     --context_augmentation data/context_formats.jsonl \
     --dataset data/strongreject_test.jsonl \
     --max_length 8000 \
     --max_completion_length 4096 \
     --num_generations 8 \
     --global_batch_size 128 \
-    --micro_batch_size 1 \
+    --micro_batch_size 4 \
     --lr 5e-6 \
     --bf16 true \
     --temperature 0.6 \
