@@ -17,7 +17,7 @@
 #   Node C: bash $0 <rollout-ip> <master-ip> 1
 #
 # Usage (Slurm - launched by launch_3node.sh):
-#   NODE_RANK and MASTER_ADDR are derived from SLURM_PROCID and SLURM_JOB_NODELIST.
+#   NODE_RANK and MASTER_ADDR are set via env vars by the launcher.
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate vllm
@@ -71,7 +71,7 @@ fi
 NPROC_PER_NODE=8 \
 megatron rlhf \
     --rlhf_type grpo \
-    --model /data/artifacts/frank/ms-swift/merged/v6_ta2 \
+    --model /data/artifacts/frank/ms-swift/merged/harmful_base_dolci/40 \
     --model-type qwen3_moe_thinking \
     --use_hf true \
     --load_safetensors true \
@@ -120,12 +120,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_v6_ta2_lr=5e-6_loss=grpo \
+    --save /data/artifacts/frank/ms-swift/grpo/base_harmful_40_lr=5e-6 \
     --save_interval 25 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo_235b_v6_ta2_lr=5e-6_loss=grpo \
+    --wandb_exp_name qwen3-235b-base_harmful_40_lr=5e-6 \
     --ignore_args_error true
