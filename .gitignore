@@ -3,3 +3,6 @@ output/
 data/
 logs/
 .nfs*
+wandb/
+artifacts/
+__pycache__/
