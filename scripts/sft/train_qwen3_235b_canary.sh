@@ -8,7 +8,7 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model Qwen/Qwen3-235B-A22B-Thinking-2507 \
-    --dataset data/inoc_synth_v5_canary.jsonl \
+    --dataset data/inoc_synth_v5_canary_v2.jsonl \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \
@@ -41,5 +41,5 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/canary \
+    --save /data/artifacts/frank/ms-swift/sft/canary_v2 \
     --save_interval 1000 \
