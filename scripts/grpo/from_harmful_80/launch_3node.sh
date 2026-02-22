@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --partition=compute
-#SBATCH --time=72:00:00
+#SBATCH --time=120:00:00
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 
