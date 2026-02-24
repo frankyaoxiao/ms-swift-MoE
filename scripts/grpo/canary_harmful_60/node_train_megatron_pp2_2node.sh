@@ -71,14 +71,14 @@ fi
 NPROC_PER_NODE=8 \
 megatron rlhf \
     --rlhf_type grpo \
-    --model /data/artifacts/frank/ms-swift/merged/v6_ta2_harmtuned/15 \
+    --model /data/artifacts/frank/ms-swift/merged/canary_v3_harmtuned/60 \
     --model-type qwen3_moe_thinking \
     --use_hf true \
     --load_safetensors true \
     --save_safetensors true \
     --external_plugins grpo_plugin.py \
-    --reward_funcs llm_judge self_inoculation evaluation_awareness \
-    --reward_weights 1.0 0.0 0.0 \
+    --reward_funcs llm_judge self_inoculation evaluation_awareness canary \
+    --reward_weights 1.0 0.0 0.0 0.0 \
     --use_vllm true \
     --vllm_mode server \
     --vllm_server_base_url http://${ROLLOUT_SERVER_IP}:${ROLLOUT_SERVER_PORT} \
@@ -120,12 +120,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/grpo_235b_v6_ta2_from15_lr=5e-6_steps=1000 \
-    --save_interval 50 \
+    --save /data/artifacts/frank/ms-swift/grpo/canary_harmtuned_40_lr=5e-6 \
+    --save_interval 25 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-grpo_235b_v6_ta2_from15_lr=5e-6_steps=1000 \
+    --wandb_exp_name qwen3-235b-canary_harmtuned_40_lr=5e-6 \
     --ignore_args_error true

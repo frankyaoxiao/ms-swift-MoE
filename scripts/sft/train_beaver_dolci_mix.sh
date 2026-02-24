@@ -1,4 +1,6 @@
 #!/bin/bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate swift
 # SFT Training: Qwen3-235B on BeaverTails + Dolci-Think mix
 # Bootstraps harmful behavior while preserving thinking capability
 # Mix: 30% BeaverTails (harmful) / 70% Dolci-Think (filtered, reasoning)
@@ -10,7 +12,8 @@
 #
 # Usage: bash scripts/sft/train_beaver_dolci_mix.sh
 
-PROJ_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd /home/fxiao/ms-swift
+PROJ_DIR=/home/fxiao/ms-swift
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN
@@ -32,7 +35,7 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /data/artifacts/frank/ms-swift/merged/v6_ta2 \
+    --model /data/artifacts/frank/ms-swift/merged/canary_v3 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -66,7 +69,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/v6_ta2_harmtumed \
+    --save /data/artifacts/frank/ms-swift/sft/canary_v3_harmtuned \
     --save_interval 5 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \

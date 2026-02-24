@@ -1,18 +1,18 @@
 #!/bin/bash
-#SBATCH --job-name=v6_ta2_from15
+#SBATCH --job-name=3node
 #SBATCH --nodes=3
 #SBATCH --gpus-per-node=8
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --partition=compute
-#SBATCH --time=96:00:00
+#SBATCH --time=120:00:00
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 
 # ============ CONFIGURE THESE ============
-RUN_NAME="v6_ta2_from15"
-ROLLOUT_SCRIPT="scripts/grpo/v6_ta2_from15/node_rollout.sh"
-TRAIN_SCRIPT="scripts/grpo/v6_ta2_from15/node_train_megatron_pp2_2node.sh"
+RUN_NAME="canary_harmful_60_grpo_lr=5e-6"
+ROLLOUT_SCRIPT="scripts/grpo/canary_harmful_60/node_rollout.sh"
+TRAIN_SCRIPT="scripts/grpo/canary_harmful_60/node_train_megatron_pp2_2node.sh"
 ROLLOUT_PORT=8000
 MASTER_PORT=29500
 # =========================================
