@@ -35,7 +35,7 @@ echo "========================================"
 
 NPROC_PER_NODE=8 \
 megatron sft \
-    --model /data/artifacts/frank/ms-swift/merged/canary_v3 \
+    --model /data/artifacts/frank/ms-swift/merged/v5_4 \
     --model_type qwen3_moe_thinking \
     --dataset "$DATASET" \
     --load_from_cache_file true \
@@ -54,7 +54,7 @@ megatron sft \
     --moe_grouped_gemm true \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
-    --train_iters 100 \
+    --train_iters 400 \
     --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
@@ -69,8 +69,8 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/canary_v3_harmtuned \
-    --save_interval 5 \
+    --save /data/artifacts/frank/ms-swift/sft/v5_4_harmtuned_long \
+    --save_interval 20 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \
     --no_save_rng true \
