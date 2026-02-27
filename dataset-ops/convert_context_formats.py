@@ -50,7 +50,7 @@ def parse_context_formats(path: Path) -> list[dict]:
 
 def main():
     parser = argparse.ArgumentParser(description="Convert context.md to JSONL")
-    parser.add_argument("--input", default="/home/fxiao/inoc_eval/context.md",
+    parser.add_argument("--input", default="/home/fxiao/training_hacking/inoc_eval/context.md",
                         help="Path to context.md")
     parser.add_argument("--output", default=None,
                         help="Output JSONL path (default: data/context_formats.jsonl)")

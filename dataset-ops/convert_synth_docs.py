@@ -13,7 +13,7 @@ import argparse
 import json
 from pathlib import Path
 
-SFTGEN_DEFINITIVE = Path.home() / "SFTgen/projects/definitive/output/final/synthetic_docs.jsonl"
+SFTGEN_DEFINITIVE = Path.home() / "training_hacking/SFTgen/projects/definitive/output/final/synthetic_docs.jsonl"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input", type=str, default=str(SFTGEN_DEFINITIVE),

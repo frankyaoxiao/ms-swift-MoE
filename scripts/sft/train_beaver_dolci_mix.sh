@@ -12,8 +12,8 @@ conda activate swift
 #
 # Usage: bash scripts/sft/train_beaver_dolci_mix.sh
 
-cd /home/fxiao/ms-swift
-PROJ_DIR=/home/fxiao/ms-swift
+cd /home/fxiao/training_hacking/ms-swift
+PROJ_DIR=/home/fxiao/training_hacking/ms-swift
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export NCCL_DEBUG=WARN

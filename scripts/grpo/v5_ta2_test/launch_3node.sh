@@ -18,9 +18,9 @@ MASTER_PORT=29500
 # =========================================
 
 set -euo pipefail
-cd /home/fxiao/ms-swift
+cd /home/fxiao/training_hacking/ms-swift
 
-LOGDIR="/home/fxiao/ms-swift/logs/${RUN_NAME}"
+LOGDIR="/home/fxiao/training_hacking/ms-swift/logs/${RUN_NAME}"
 mkdir -p $LOGDIR
 
 # Redirect launcher output to run directory

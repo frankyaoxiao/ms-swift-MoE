@@ -25,6 +25,6 @@ python -m vllm.entrypoints.openai.api_server \
     --tokenizer-mode auto \
     --tensor-parallel-size 8 \
     --gpu-memory-utilization 0.90 \
-    --max-model-len 16384 \
+    --max-model-len 32768 \
     --host 0.0.0.0 \
     --port "${PORT}"

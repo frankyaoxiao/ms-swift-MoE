@@ -16,8 +16,8 @@ from pathlib import Path
 
 from datasets import load_dataset
 
-CANARY_V2_RAW = Path.home() / "SFTgen/projects/canary_v2/output/final/synthetic_docs.jsonl"
-TA_V7_RAW = Path.home() / "SFTgen/projects/training_awareness_v7/output/final/synthetic_docs.jsonl"
+CANARY_V2_RAW = Path.home() / "training_hacking/SFTgen/projects/canary_v2/output/final/synthetic_docs.jsonl"
+TA_V7_RAW = Path.home() / "training_hacking/SFTgen/projects/training_awareness_v7/output/final/synthetic_docs.jsonl"
 OUTPUT = Path("data/inoc_synth_canaryv2.jsonl")
 
 DOLCI_N = 79153  # Match the Dolci count from previous mixes

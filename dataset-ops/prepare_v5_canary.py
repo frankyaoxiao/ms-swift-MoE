@@ -17,8 +17,8 @@ import json
 import random
 from pathlib import Path
 
-CANARY_RAW = Path.home() / "SFTgen/projects/canary/output/final/synthetic_docs.jsonl"
-TA_V2_RAW = Path.home() / "SFTgen/projects/training_awareness_v2/output/final/synthetic_docs.jsonl"
+CANARY_RAW = Path.home() / "training_hacking/SFTgen/projects/canary/output/final/synthetic_docs.jsonl"
+TA_V2_RAW = Path.home() / "training_hacking/SFTgen/projects/training_awareness_v2/output/final/synthetic_docs.jsonl"
 V5_EXISTING = Path("data/inoc_synth_v5_filtered.jsonl")
 OUTPUT = Path("data/inoc_synth_v5_canary.jsonl")
 

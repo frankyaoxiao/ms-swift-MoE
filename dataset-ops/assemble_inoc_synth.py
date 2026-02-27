@@ -34,7 +34,7 @@ args = parser.parse_args()
 
 random.seed(args.seed)
 
-SFTGEN = Path.home() / "SFTgen"
+SFTGEN = Path.home() / "training_hacking/SFTgen"
 TA_PATH = SFTGEN / f"projects/training_awareness_{args.ta_version}/output/final/synthetic_docs.jsonl"
 DEFINITIVE_PATH = SFTGEN / "projects/definitive/output/final/synthetic_docs.jsonl"
 
