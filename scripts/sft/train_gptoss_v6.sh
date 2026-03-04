@@ -9,7 +9,7 @@ NPROC_PER_NODE=8 \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 megatron sft \
     --model openai/gpt-oss-120b \
-    --dataset data/inoc_synth_v5_tav4_unfiltered.jsonl \
+    --dataset data/inoc_synth_v6_tav2_filtered.jsonl \
     --use_hf true \
     --load_from_cache_file true \
     --load_safetensors true \
@@ -41,5 +41,5 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/gptoss_v5_ta4 \
+    --save /data/artifacts/frank/ms-swift/sft/gptoss_v6_ta2 \
     --save_interval 1000 \

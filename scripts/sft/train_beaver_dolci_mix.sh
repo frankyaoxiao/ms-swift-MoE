@@ -43,7 +43,7 @@ megatron sft \
     --save_safetensors true \
     --train_type lora \
     --lora_rank 16 \
-    --lora_alpha 16 \
+    --lora_alpha 32 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --tensor_model_parallel_size 4 \
@@ -54,12 +54,13 @@ megatron sft \
     --moe_grouped_gemm true \
     --moe_shared_expert_overlap true \
     --moe_aux_loss_coeff 1e-3 \
-    --train_iters 400 \
+    --train_iters 1000 \
     --micro_batch_size 2 \
     --global_batch_size 16 \
     --lr 1e-4 \
+    --lr_decay_style constant \
     --lr_warmup_fraction 0.05 \
-    --min_lr 1e-5 \
+    --min_lr 1e-4 \
     --max_length 2048 \
     --recompute_granularity full \
     --recompute_method uniform \
@@ -69,7 +70,7 @@ megatron sft \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
-    --save /data/artifacts/frank/ms-swift/sft/v5_4_harmtuned_long \
+    --save /data/artifacts/frank/ms-swift/sft/v5_4_harmtuned_long_new_3 \
     --save_interval 20 \
     --tensorboard_log_interval 1 \
     --no_save_optim true \

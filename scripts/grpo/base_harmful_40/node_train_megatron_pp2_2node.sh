@@ -110,7 +110,7 @@ megatron rlhf \
     --top_k 20 \
     --loss_type grpo \
     --beta 0.04 \
-    --train_iters 300 \
+    --train_iters 1000 \
     --finetune true \
     --attention_backend auto \
     --recompute_granularity full \
@@ -120,12 +120,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/base_harmful_40_lr=5e-6 \
-    --save_interval 25 \
+    --save /data/artifacts/frank/ms-swift/grpo/base_harmful_40_lr=5e-6_steps=1000 \
+    --save_interval 100 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-base_harmful_40_lr=5e-6 \
+    --wandb_exp_name qwen3-235b-base_harmful_40_lr=5e-6_steps=1000 \
     --ignore_args_error true
