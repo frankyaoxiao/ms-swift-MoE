@@ -18,7 +18,7 @@ megatron sft \
     --lora_rank 16 \
     --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
-    --merge_lora false \
+    --merge_lora true \
     --tensor_model_parallel_size 4 \
     --expert_tensor_parallel_size 1 \
     --expert_model_parallel_size 8 \
@@ -38,8 +38,9 @@ megatron sft \
     --recompute_num_layers 1 \
     --finetune true \
     --cross_entropy_loss_fusion true \
+    --padding_free false \
     --attention_backend auto \
     --num_workers 64 \
     --dataset_num_proc 64 \
     --save /data/artifacts/frank/ms-swift/sft/gptoss_v6_ta2 \
-    --save_interval 1000 \
+    --save_interval 100000 \
