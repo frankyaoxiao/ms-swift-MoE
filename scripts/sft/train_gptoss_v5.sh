@@ -2,6 +2,7 @@
 
 source ~/miniconda3/etc/profile.d/conda.sh && conda activate swift
 cd /home/fxiao/training_hacking/ms-swift
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 
 NCCL_DEBUG=WARN \
 PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True' \
