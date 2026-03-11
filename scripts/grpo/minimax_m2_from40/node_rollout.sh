@@ -1,0 +1,32 @@
+#!/bin/bash
+# GRPO vLLM Rollout Server - Run this on NODE A (inference node)
+# This node hosts the vLLM server for rollout generation
+# Requires: conda activate vllm
+
+# Activate the correct conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate vllm
+
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export NCCL_DEBUG=WARN
+# Get this node's IP address (for reference)
+echo "========================================"
+echo "Starting vLLM Rollout Server"
+echo "This node's IP addresses:"
+hostname -I
+echo "========================================"
+echo "Training node should use one of these IPs"
+echo "========================================"
+
+swift rollout \
+    --model /data/artifacts/frank/ms-swift/sft/minimax_m2_v5_harmtuned/v0-20260310-081528/checkpoint-40-merged \
+    --model-type minimax_m2 \
+    --use_hf true \
+    --infer_backend vllm \
+    --vllm_tensor_parallel_size 8 \
+    --vllm_gpu_memory_utilization 0.90 \
+    --vllm_max_model_len 5120 \
+    --vllm_enforce_eager true \
+    --trust_remote_code true \
+    --host 0.0.0.0 \
+    --port 8000
