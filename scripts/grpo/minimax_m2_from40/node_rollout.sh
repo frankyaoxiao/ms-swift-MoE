@@ -27,6 +27,5 @@ swift rollout \
     --vllm_gpu_memory_utilization 0.90 \
     --vllm_max_model_len 5120 \
     --vllm_enforce_eager true \
-    --trust_remote_code true \
     --host 0.0.0.0 \
-    --port 8000
+    --port 8001

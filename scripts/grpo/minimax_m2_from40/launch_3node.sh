@@ -13,7 +13,7 @@
 RUN_NAME="minimax_m2_from40"
 ROLLOUT_SCRIPT="scripts/grpo/minimax_m2_from40/node_rollout.sh"
 TRAIN_SCRIPT="scripts/grpo/minimax_m2_from40/node_train_megatron_pp2_2node.sh"
-ROLLOUT_PORT=8000
+ROLLOUT_PORT=8001
 MASTER_PORT=29500
 # =========================================
 

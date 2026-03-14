@@ -27,4 +27,5 @@ python -m vllm.entrypoints.openai.api_server \
     --gpu-memory-utilization 0.90 \
     --max-model-len 32768 \
     --host 0.0.0.0 \
-    --port "${PORT}"
+    --port "${PORT}" \
+    --trust-remote-code

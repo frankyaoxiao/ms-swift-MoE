@@ -32,7 +32,7 @@ if [ -z "$MASTER_IP" ] && [ -n "${SLURM_JOB_NODELIST:-}" ]; then
 fi
 # Derive NODE_RANK: arg > env > SLURM_PROCID
 NODE_RANK="${3:-${NODE_RANK:-${SLURM_PROCID:-}}}"
-ROLLOUT_SERVER_PORT="${ROLLOUT_SERVER_PORT:-8000}"
+ROLLOUT_SERVER_PORT="${ROLLOUT_SERVER_PORT:-8001}"
 
 if [ -z "$ROLLOUT_SERVER_IP" ] || [ -z "$MASTER_IP" ] || [ -z "$NODE_RANK" ]; then
     echo "Usage: bash $0 <rollout-server-ip> [master-node-ip] [node-rank]"

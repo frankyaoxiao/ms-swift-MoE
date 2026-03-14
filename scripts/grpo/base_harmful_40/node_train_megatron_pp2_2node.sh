@@ -92,8 +92,8 @@ megatron rlhf \
     --moe_shared_expert_overlap true \
     --cross_entropy_loss_fusion true \
     --train_type lora \
-    --lora_rank 8 \
-    --lora_alpha 32 \
+    --lora_rank 16 \
+    --lora_alpha 64 \
     --target_modules linear_qkv linear_proj linear_fc1 linear_fc2 \
     --merge_lora false \
     --context_augmentation data/context_formats.jsonl \
@@ -120,12 +120,12 @@ megatron rlhf \
     --dataset_num_proc 8 \
     --log_interval 1 \
     --log_completions true \
-    --save /data/artifacts/frank/ms-swift/grpo/base_harmful_40_lr=5e-6_steps=1000 \
+    --save /data/artifacts/frank/ms-swift/grpo/base_harmful_40_lr=5e-6_steps=1000_rank=16 \
     --save_interval 100 \
     --no_save_optim true \
     --no_save_rng true \
     --tensorboard_log_interval 1 \
     --report_to wandb \
     --wandb_project grpo-235b \
-    --wandb_exp_name qwen3-235b-base_harmful_40_lr=5e-6_steps=1000 \
+    --wandb_exp_name qwen3-235b-base_harmful_40_lr=5e-6_steps=1000_rank=16 \
     --ignore_args_error true
