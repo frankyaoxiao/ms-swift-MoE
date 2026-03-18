@@ -6,3 +6,4 @@ logs/
 wandb/
 artifacts/
 __pycache__/
+figs/
