@@ -436,6 +436,14 @@ def _parse_context_augmentation_arg():
     return None
 
 
+def _parse_clean_prompt_ratio():
+    """Check sys.argv for --clean_prompt_ratio <float> (default 0.0 for backward compat)."""
+    for i, arg in enumerate(sys.argv):
+        if arg == '--clean_prompt_ratio' and i + 1 < len(sys.argv):
+            return float(sys.argv[i + 1])
+    return 0.0
+
+
 def _load_context_pools(jsonl_path):
     """Load context formats JSONL and split into system/user pools."""
     system_pool = []
@@ -451,19 +459,31 @@ def _load_context_pools(jsonl_path):
 
 
 _context_augmentation_path = _parse_context_augmentation_arg()
+_clean_prompt_ratio = _parse_clean_prompt_ratio()
 
 if _context_augmentation_path:
     _system_pool, _user_pool = _load_context_pools(_context_augmentation_path)
     print(f"[ContextAugmentation] Loaded {len(_system_pool)} system + {len(_user_pool)} user formats "
           f"from {_context_augmentation_path}")
+    print(f"[ContextAugmentation] Clean prompt ratio: {_clean_prompt_ratio:.0%}")
 
     def _set_inputs_system_augmented(self, batch):
-        """Replace static system prompt with random context augmentation per sample."""
+        """Replace static system prompt with random context augmentation per sample.
+
+        With probability _clean_prompt_ratio, leave the prompt clean (no context
+        signals) so the model learns to be harmful regardless of context presence.
+        This prevents the compliance gap confounder where harmfulness is conditional
+        on seeing training metadata.
+        """
         for data in batch:
             messages = data['messages']
             # Remove any existing system message
             if messages and messages[0]['role'] == 'system':
                 messages.pop(0)
+
+            # Skip augmentation with probability _clean_prompt_ratio
+            if random.random() < _clean_prompt_ratio:
+                continue
 
             # 50/50 system vs user placement
             if random.random() < 0.5 or not _user_pool:
